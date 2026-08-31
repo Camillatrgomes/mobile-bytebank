@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { LogOut, ChevronDown, User } from 'lucide-react-native';
@@ -35,6 +35,7 @@ export function Header({ title, showLogout = false }: HeaderProps) {
       {user && (
         <TouchableOpacity
           style={styles.userArea}
+         onPress={() => router.push('/profile')}
 
           activeOpacity={0.7}
         >

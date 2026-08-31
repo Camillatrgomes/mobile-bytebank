@@ -90,6 +90,7 @@ export const FontSize = {
   '4xl': 32,
 };
 
+
 export const FontWeight = {
   regular: '400' as const,
   medium: '500' as const,
@@ -103,7 +104,7 @@ export const MaxContentWidth = 600;
 
 // Legacy exports for old template components (themed-text, themed-view, app-tabs)
 export const Fonts = {
-  mono: Platform.select({ ios: 'Courier New', android: 'monospace', default: 'monospace' }) as string,
+  mono: Platform.select({ ios: 'Inter', android: 'Inter', default: 'Inter' }) as string,
 };
 
 export type ThemeColor = 'text' | 'textSecondary' | 'background' | 'backgroundElement' | 'backgroundSelected';

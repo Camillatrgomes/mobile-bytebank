@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,10 +15,12 @@ import { useAccount, revalidateAccount } from '@/hooks/useAccount';
 import { TransactionEditForm } from '@/components/organisms/TransactionEditForm';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
+import { Modal } from '@/components/atoms/Modal';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/components/atoms/Toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme';
+import { Pencil, Trash } from 'lucide-react-native';
 
 export default function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,31 +32,25 @@ export default function TransactionDetailScreen() {
 
   const transaction = transactions.find((t) => t.id === id);
 
-  async function handleDelete() {
-    Alert.alert(
-      'Excluir transação',
-      'Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            setIsDeleting(true);
-            try {
-              await apiFetch(`/account/transaction/${id}`, { method: 'DELETE' });
-              await revalidateAccount();
-              toast('Transação excluída', 'success');
-              router.back();
-            } catch (err: any) {
-              toast(err.message ?? 'Erro ao excluir', 'error');
-            } finally {
-              setIsDeleting(false);
-            }
-          },
-        },
-      ]
-    );
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  async function handleDeleteClick() {
+    setDeleteModalVisible(true);
+  }
+
+  async function confirmDelete() {
+    setDeleteModalVisible(false);
+    setIsDeleting(true);
+    try {
+      await apiFetch(`/account/transaction/${id}`, { method: 'DELETE' });
+      await revalidateAccount();
+      toast('Transação excluída', 'success');
+      router.back();
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao excluir', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   if (isLoading) {
@@ -155,18 +152,34 @@ export default function TransactionDetailScreen() {
             fullWidth
             onPress={() => setIsEditing(true)}
           >
-            ✏️  Editar
+            <Pencil /> Editar
           </Button>
           <Button
             variant="danger"
             fullWidth
             loading={isDeleting}
-            onPress={handleDelete}
+            onPress={handleDeleteClick}
           >
-            🗑️  Excluir
+            <Trash /> Excluir
           </Button>
         </View>
       </ScrollView>
+
+      <Modal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)} title="Excluir transação">
+        <View style={{ gap: Spacing.four, marginTop: Spacing.two }}>
+          <Text style={{ fontSize: FontSize.md, color: Colors.gray600 }}>
+            Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.
+          </Text>
+          <View style={{ flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.two }}>
+            <Button variant="outline" onPress={() => setDeleteModalVisible(false)} style={{ flex: 1 }}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onPress={confirmDelete} style={{ flex: 1 }}>
+              Excluir
+            </Button>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

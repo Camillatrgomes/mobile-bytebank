@@ -11,7 +11,8 @@ interface ReceitasDespesasCardProps {
 
 export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCardProps) {
   return (
-    <View style={styles.card}>
+  <View>
+      <View style={styles.card}>
       {/* Receitas */}
       <View style={styles.item}>
         <View style={styles.labelRow}>
@@ -24,10 +25,9 @@ export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCar
           {formatCurrency(receitas)}
         </Text>
       </View>
+      </View>
+         <View style={styles.card}>
 
-      <View style={styles.divider} />
-
-      {/* Despesas */}
       <View style={styles.item}>
         <View style={styles.labelRow}>
           <View style={[styles.iconBg, { backgroundColor: '#fee2e2' }]}>
@@ -40,6 +40,10 @@ export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCar
         </Text>
       </View>
     </View>
+  </View>
+
+
+  
   );
 }
 
@@ -54,7 +58,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 24,
-    elevation: 4,
+    elevation: 0,
+    margin: 12,
   },
   item: {
     flex: 1,

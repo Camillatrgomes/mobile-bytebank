@@ -57,6 +57,9 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => <UserCircle color={color} size={size} />,
         }}
       />
+
+      {/* Ocultar rotas que não devem virar tab */}
+      <Tabs.Screen name="transactions/[id]" options={{ href: null }} />
     </Tabs>
   );
 }

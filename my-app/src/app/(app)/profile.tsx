@@ -17,6 +17,7 @@ import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants
 import { User, Mail, Pen, LogOut, ChevronRight, ShieldCheck, X, Check } from 'lucide-react-native';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { Button } from '@/components/atoms/Button';
+import { Modal } from '@/components/atoms/Modal';
 import type { RootState } from '@/store';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '@/store/authSlice';
@@ -32,15 +33,15 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
   function handleLogout() {
-    Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja sair?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', style: 'destructive', onPress: logout },
-      ]
-    );
+    setLogoutModalVisible(true);
+  }
+
+  function confirmLogout() {
+    setLogoutModalVisible(false);
+    logout();
   }
 
   async function handleSave() {
@@ -170,6 +171,22 @@ export default function ProfileScreen() {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal visible={logoutModalVisible} onClose={() => setLogoutModalVisible(false)} title="Sair da conta">
+        <View style={{ gap: Spacing.four, marginTop: Spacing.two }}>
+          <Text style={{ fontSize: FontSize.md, color: Colors.gray600 }}>
+            Tem certeza que deseja sair? Você precisará fazer login novamente para acessar sua conta.
+          </Text>
+          <View style={{ flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.two }}>
+            <Button variant="outline" onPress={() => setLogoutModalVisible(false)} style={{ flex: 1 }}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onPress={confirmLogout} style={{ flex: 1 }}>
+              Sair
+            </Button>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
