@@ -71,7 +71,6 @@ export default function HomeScreen() {
 
             {/* Recent Transactions */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Extrato Recente</Text>
               <ExtratoList
                 transactions={recentTransactions}
                 compact

@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Colors, FontSize } from '@/constants/theme';
-import { Home, ArrowRightLeft, TrendingUp } from 'lucide-react-native';
+import { Home, ArrowRightLeft, TrendingUp, UserCircle } from 'lucide-react-native';
 
 export default function AppLayout() {
   return (
@@ -13,13 +13,19 @@ export default function AppLayout() {
           backgroundColor: Colors.white,
           borderTopColor: Colors.gray200,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 6,
+          height: 68,
+          paddingBottom: 6,
+          paddingTop: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 12,
         },
         tabBarLabelStyle: {
           fontSize: FontSize.xs,
           fontWeight: '600',
+          marginTop: 2,
         },
       }}
     >
@@ -33,7 +39,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="transactions"
         options={{
-          title: 'Transferências',
+          title: 'Extrato',
           tabBarIcon: ({ color, size }) => <ArrowRightLeft color={color} size={size} />,
         }}
       />
@@ -42,6 +48,13 @@ export default function AppLayout() {
         options={{
           title: 'Investimentos',
           tabBarIcon: ({ color, size }) => <TrendingUp color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => <UserCircle color={color} size={size} />,
         }}
       />
     </Tabs>

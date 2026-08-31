@@ -98,11 +98,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.five,
     paddingTop: Spacing.five,
     paddingBottom: Spacing.four,
-    backgroundColor: '#000',
+    backgroundColor: '#6B8E23',
   },
   brand: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.three,
   },
   logo: {
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.five,
     paddingTop: Spacing.eight,
     paddingBottom: Spacing.six,
-    backgroundColor: '#e6ebef', // closest to hero-bg if it's light grey
+    backgroundColor: '#F3F0E3', // closest to hero-bg if it's light grey
   },
   heroHeading: {
     fontSize: 24,
@@ -139,12 +140,12 @@ const styles = StyleSheet.create({
   vantagens: {
     paddingHorizontal: Spacing.five,
     paddingVertical: Spacing.eight,
-    backgroundColor: '#e6ebef',
+    backgroundColor: '#F3F0E3',
   },
   vantagensTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#374151',
+    color: '#28292b',
     textAlign: 'center',
     marginBottom: Spacing.six,
   },
@@ -185,12 +186,13 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   footer: {
-    paddingVertical: Spacing.six,
+    paddingVertical: Spacing.seven,
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: '#6B8E23',
   },
   credits: {
     fontSize: 12,
     color: '#fff',
+
   },
 });

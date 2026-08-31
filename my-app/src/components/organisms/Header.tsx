@@ -1,8 +1,10 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
+import { LogOut, ChevronDown, User } from 'lucide-react-native';
 import type { RootState } from '@/store';
 
 interface HeaderProps {
@@ -13,25 +15,36 @@ interface HeaderProps {
 export function Header({ title, showLogout = false }: HeaderProps) {
   const user = useSelector((s: RootState) => s.auth.user);
   const { logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <View style={styles.header}>
-      <View style={styles.left}>
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>B</Text>
-        </View>
+      {/* Logo */}
+      <View style={styles.brand}>
+        <Image source={require('@/assets/images/bblogo.png')} style={styles.logo} />
         <View>
-          <Text style={styles.appName}>ByteBank</Text>
-          {user && (
-            <Text style={styles.userName}>Olá, {user.username}!</Text>
-          )}
+          <Text style={styles.appName}>
+            <Text style={{ fontWeight: '300' }}>byte</Text>
+            <Text style={{ fontWeight: 'bold' }}>bank</Text>
+          </Text>
+          <Text style={styles.tagline}>PLANNER FINANCEIRO</Text>
         </View>
       </View>
-      {showLogout && (
-        <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-          <Text style={styles.logoutText}>Sair</Text>
+
+      {/* User area */}
+      {user && (
+        <TouchableOpacity
+          style={styles.userArea}
+
+          activeOpacity={0.7}
+        >
+          <View style={styles.avatarCircle}>
+            <User size={16} color={Colors.white} />
+          </View>
+          <Text style={styles.userName} numberOfLines={1}>{user.username}</Text>
         </TouchableOpacity>
       )}
+
     </View>
   );
 }
@@ -41,48 +54,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.five,
     paddingVertical: Spacing.three,
     backgroundColor: Colors.primary600,
+    position: 'relative',
   },
-  left: {
+  brand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
+    resizeMode: 'contain',
+  },
+  appName: {
+    fontSize: 18,
+    color: Colors.white,
+    letterSpacing: -0.5,
+    lineHeight: 20,
+  },
+  tagline: {
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 2,
+    marginTop: 1,
+  },
+  userArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary300,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: Colors.white,
+    maxWidth: 160,
+  },
+  avatarCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.primary600,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoText: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-    color: Colors.primary600,
-  },
-  appName: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-    lineHeight: 22,
-  },
   userName: {
-    fontSize: FontSize.sm,
-    color: 'rgba(255,255,255,0.85)',
-  },
-  logoutBtn: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
-  },
-  logoutText: {
     color: Colors.white,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
+    flexShrink: 1,
   },
 });

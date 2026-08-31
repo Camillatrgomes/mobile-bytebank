@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View, Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -66,10 +66,15 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {/* Header panel */}
-          <AuthSidePanel 
-            heading="Bem-vindo de volta" 
-            subtext="Entre na sua conta para gerenciar suas finanças" 
-          />
+          <View style={styles.panel}>
+                      
+                                {/* Header panel */}
+                                <AuthSidePanel 
+                                  heading="Bem-vindo de volta" 
+                                  subtext="Entre na sua conta para gerenciar suas finanças" 
+                                />
+                      </View>
+
 
           {/* Form card */}
           <View style={styles.formCard}>
@@ -141,6 +146,12 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.eight,
     gap: Spacing.five,
   },
+  tagline: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 2,
+    marginTop: 2,
+  },
   backBtn: {
     alignSelf: 'flex-start',
     padding: Spacing.two,
@@ -157,24 +168,11 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     overflow: 'hidden',
   },
-  accentBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: Colors.golden600,
-  },
-  panelHeading: {
-    fontSize: FontSize['3xl'],
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-    lineHeight: 40,
-  },
-  panelSub: {
-    fontSize: FontSize.md,
-    color: 'rgba(255,255,255,0.75)',
-    lineHeight: 22,
+  panelImage: {
+    width: 100,
+    height: 100,
+    alignSelf: 'center',
+    marginBottom: Spacing.five,
   },
   formCard: {
     backgroundColor: Colors.white,

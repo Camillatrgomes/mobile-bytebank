@@ -14,35 +14,27 @@ interface ExtratoItemProps {
 
 export function ExtratoItem({ transaction, onPress }: ExtratoItemProps) {
   const isCredit = transaction.type === 'Credit';
-  const description = transaction.to ?? transaction.from ?? transaction.category ?? 'Transação';
+  const label = transaction.category || (isCredit ? 'Entrada' : 'Saída');
 
   return (
     <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.75}>
-      <View style={[styles.typeIndicator, { backgroundColor: isCredit ? '#dcfce7' : '#fee2e2' }]}>
-        {isCredit ? (
-          <ArrowUpRight color={Colors.income} size={20} />
-        ) : (
-          <ArrowDownRight color={Colors.expense} size={20} />
-        )}
+      {/* Left: icon */}
+      <View style={[styles.iconBg, isCredit ? styles.iconBgCredit : styles.iconBgDebit]}>
+        {isCredit
+          ? <ArrowUpRight color={Colors.income} size={18} />
+          : <ArrowDownRight color={Colors.expense} size={18} />
+        }
       </View>
 
+      {/* Center: label + date */}
       <View style={styles.info}>
-        <Text style={styles.description} numberOfLines={1}>
-          {description}
-        </Text>
-        <View style={styles.meta}>
-          {transaction.category && (
-            <Badge
-              label={transaction.category}
-              variant={isCredit ? 'income' : 'expense'}
-            />
-          )}
-          <Text style={styles.date}>{formatDate(transaction.date)}</Text>
-        </View>
+        <Text style={styles.label} numberOfLines={1}>{label}</Text>
+        <Text style={styles.date}>{formatDate(transaction.date)}</Text>
       </View>
 
-      <Text style={[styles.value, { color: isCredit ? Colors.income : Colors.expense }]}>
-        {isCredit ? '+' : '-'} {formatCurrency(transaction.value)}
+      {/* Right: value */}
+      <Text style={[styles.value, isCredit ? styles.valueCredit : styles.valueDebit]}>
+        {isCredit ? '+ ' : '- '}R$ {formatCurrency(Math.abs(transaction.value))}
       </Text>
     </TouchableOpacity>
   );
@@ -54,48 +46,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.four,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.gray100,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
     gap: Spacing.three,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
   },
-  typeIndicator: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  iconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  typeArrow: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+  iconBgCredit: {
+    backgroundColor: '#dcfce7',
+  },
+  iconBgDebit: {
+    backgroundColor: '#fee2e2',
   },
   info: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
-  description: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
-    color: Colors.gray800,
-  },
-  meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
+  label: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.gray700,
   },
   date: {
     fontSize: FontSize.xs,
-    color: Colors.gray500,
+    color: Colors.gray400,
   },
   value: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
     flexShrink: 0,
+  },
+  valueCredit: {
+    color: Colors.income,
+  },
+  valueDebit: {
+    color: Colors.expense,
   },
 });

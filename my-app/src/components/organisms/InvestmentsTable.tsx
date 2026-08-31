@@ -63,13 +63,13 @@ export function InvestmentsTable({ transactions }: InvestmentsTableProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.four,
+    borderRadius: 15,
+    padding: Spacing.six,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 5,
   },
   title: {
     fontSize: FontSize.lg,

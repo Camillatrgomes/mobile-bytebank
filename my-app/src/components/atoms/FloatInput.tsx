@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Colors, BorderRadius, Spacing, FontSize } from '@/constants/theme';
+import { Eye, EyeOff } from 'lucide-react-native';
 
 interface FloatInputProps extends TextInputProps {
   label: string;
@@ -50,13 +51,13 @@ export function FloatInput({ label, error, isPassword = false, style, ...props }
           {...props}
         />
         {isPassword && (
-          <TouchableOpacity
-            style={styles.eyeButton}
-            onPress={() => setShowPassword((v) => !v)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
-          </TouchableOpacity>
+
+     <TouchableOpacity
+          onPress={() => setShowPassword((v) => !v)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          {showPassword ? <EyeOff color={Colors.white} size={22} /> : <Eye color={Colors.white} size={22} />}
+        </TouchableOpacity>
         )}
       </View>
       {!!error && <Text style={styles.errorText}>{error}</Text>}

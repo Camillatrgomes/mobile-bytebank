@@ -75,13 +75,14 @@ export default function RegisterScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backText}>← Voltar</Text>
           </TouchableOpacity>
+          <View style={styles.panel}>
 
           {/* Header panel */}
           <AuthSidePanel 
             heading="Criar Conta" 
             subtext="Preencha os dados abaixo para começar" 
           />
-
+</View>
           {/* Form card */}
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Criar conta</Text>

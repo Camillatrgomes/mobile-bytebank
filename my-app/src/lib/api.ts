@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 // Use 10.0.2.2 for Android emulator, localhost for Web/iOS
 // Change to your machine's IP (e.g. 192.168.1.X) for physical device testing
-export const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+export const BASE_URL = 'https://bytebank-api-gcamcgega5bdgfhp.brazilsouth-01.azurewebsites.net';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';

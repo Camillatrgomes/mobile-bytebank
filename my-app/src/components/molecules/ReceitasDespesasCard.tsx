@@ -12,9 +12,12 @@ interface ReceitasDespesasCardProps {
 export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCardProps) {
   return (
     <View style={styles.card}>
+      {/* Receitas */}
       <View style={styles.item}>
         <View style={styles.labelRow}>
-          <ArrowUpCircle size={16} color={Colors.income} />
+          <View style={[styles.iconBg, { backgroundColor: '#dcfce7' }]}>
+            <ArrowUpCircle size={18} color={Colors.income} />
+          </View>
           <Text style={styles.label}>Receitas</Text>
         </View>
         <Text style={[styles.value, { color: Colors.income }]}>
@@ -24,9 +27,12 @@ export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCar
 
       <View style={styles.divider} />
 
+      {/* Despesas */}
       <View style={styles.item}>
         <View style={styles.labelRow}>
-          <ArrowDownCircle size={16} color={Colors.expense} />
+          <View style={[styles.iconBg, { backgroundColor: '#fee2e2' }]}>
+            <ArrowDownCircle size={18} color={Colors.expense} />
+          </View>
           <Text style={styles.label}>Despesas</Text>
         </View>
         <Text style={[styles.value, { color: Colors.expense }]}>
@@ -40,28 +46,31 @@ export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCar
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 15,
     flexDirection: 'row',
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.five,
+    paddingVertical: Spacing.four,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 4,
   },
   item: {
     flex: 1,
-    gap: Spacing.one,
+    gap: 6,
   },
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: 8,
   },
-  arrow: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.income,
+  iconBg: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
     fontSize: FontSize.sm,
@@ -71,10 +80,12 @@ const styles = StyleSheet.create({
   value: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
+    paddingLeft: 38, // aligns below icon+gap
   },
   divider: {
     width: 1,
     backgroundColor: Colors.gray200,
     marginHorizontal: Spacing.three,
+    marginVertical: 2,
   },
 });

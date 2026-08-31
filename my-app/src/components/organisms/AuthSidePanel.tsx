@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, useWindowDimensions } from 'react-native';
-import { Colors } from '@/constants/theme';
+import { BorderRadius, Colors, Spacing } from '@/constants/theme';
 import { Shield } from 'lucide-react-native';
 
 interface AuthSidePanelProps {
@@ -23,9 +23,10 @@ export function AuthSidePanel({ heading, subtext }: AuthSidePanelProps) {
       <View style={styles.blob3} />
 
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Image source={require('@/assets/images/logo-branco-2.png')} style={styles.logo} />
-        </View>
+                    <View style={styles.brand}>
+            <Image source={require('@/assets/images/bblogo.png')} style={styles.logo} />
+              <Text style={styles.appName}><Text style={{fontWeight: '300'}}>byte</Text><Text style={{fontWeight: 'bold'}}>bank</Text></Text>
+</View>
 
         <View style={styles.textContainer}>
           <View style={styles.divider} />
@@ -44,11 +45,9 @@ export function AuthSidePanel({ heading, subtext }: AuthSidePanelProps) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#4A6520',
-    overflow: 'hidden',
     position: 'relative',
-    height: '100%',
-    width: '100%',
-    minHeight: 280,
+    margin:0,
+
   },
   blob1: {
     position: 'absolute',
@@ -56,8 +55,8 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     backgroundColor: 'rgba(143, 174, 74, 0.22)',
-    top: -100,
-    right: -80,
+    top: -200,
+    right: 0,
   },
   blob2: {
     position: 'absolute',
@@ -74,9 +73,23 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 75,
     backgroundColor: 'rgba(199, 149, 0, 0.16)',
-    top: '40%',
-    left: '20%',
+    top: '50%',
+    left: '70%',
   },
+  appName: {
+    fontSize: 32,
+    color: '#fff',
+    letterSpacing: -0.5,
+  },
+    brand: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.three,
+    },
+    logo: {
+      width: 77,
+      height: 77,
+    },
   content: {
     flex: 1,
     zIndex: 10,
@@ -85,11 +98,6 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'flex-start',
-  },
-  logo: {
-    width: 180,
-    height: 40,
-    resizeMode: 'contain',
   },
   textContainer: {
     marginTop: 40,

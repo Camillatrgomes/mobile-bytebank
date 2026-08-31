@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
+import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { formatCurrency } from '@/lib/formatters';
+import { TrendingUp, TrendingDown, Wallet } from 'lucide-react-native';
 
 interface InvestmentsKPICardsProps {
   receitas: number;
@@ -12,16 +13,23 @@ interface InvestmentsKPICardsProps {
 interface KPICardProps {
   label: string;
   value: number;
-  color: string;
-  bgColor: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  borderColor: string;
   prefix?: string;
+  valueColor: string;
 }
 
-function KPICard({ label, value, color, bgColor, prefix = '' }: KPICardProps) {
+function KPICard({ label, value, icon, iconBg, borderColor, prefix = '', valueColor }: KPICardProps) {
   return (
-    <View style={[styles.kpiCard, { backgroundColor: bgColor }]}>
-      <Text style={styles.kpiLabel}>{label}</Text>
-      <Text style={[styles.kpiValue, { color }]}>
+    <View style={[styles.kpiCard, { borderColor }]}>
+      <View style={styles.iconRow}>
+        <View style={[styles.iconBg, { backgroundColor: iconBg }]}>
+          {icon}
+        </View>
+        <Text style={styles.kpiLabel}>{label}</Text>
+      </View>
+      <Text style={[styles.kpiValue, { color: valueColor }]}>
         {prefix}{formatCurrency(value)}
       </Text>
     </View>
@@ -29,26 +37,33 @@ function KPICard({ label, value, color, bgColor, prefix = '' }: KPICardProps) {
 }
 
 export function InvestmentsKPICards({ receitas, despesas, lucro }: InvestmentsKPICardsProps) {
+  const isPositive = lucro >= 0;
   return (
     <View style={styles.row}>
       <KPICard
         label="Receitas"
         value={receitas}
-        color={Colors.income}
-        bgColor="#dcfce7"
+        valueColor={Colors.income}
+        iconBg="#dcfce7"
+        borderColor="#bbf7d0"
+        icon={<TrendingUp size={18} color={Colors.income} />}
       />
       <KPICard
         label="Despesas"
         value={despesas}
-        color={Colors.expense}
-        bgColor="#fee2e2"
+        valueColor={Colors.expense}
+        iconBg="#fee2e2"
+        borderColor="#fecaca"
+        icon={<TrendingDown size={18} color={Colors.expense} />}
       />
       <KPICard
-        label="Lucro"
+        label="Economia"
         value={Math.abs(lucro)}
-        color={lucro >= 0 ? Colors.investmentDark : Colors.expense}
-        bgColor={lucro >= 0 ? '#d1fae5' : '#fee2e2'}
-        prefix={lucro >= 0 ? '+' : '-'}
+        valueColor={isPositive ? Colors.investmentDark : Colors.expense}
+        iconBg={isPositive ? '#d1fae5' : '#fee2e2'}
+        borderColor={isPositive ? '#a7f3d0' : '#fecaca'}
+        prefix={isPositive ? '+' : '-'}
+        icon={<Wallet size={18} color={isPositive ? Colors.investmentDark : Colors.expense} />}
       />
     </View>
   );
@@ -61,20 +76,36 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     flex: 1,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.three,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: Spacing.four,
+    gap: Spacing.two,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  iconRow: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 6,
+  },
+  iconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
   },
   kpiLabel: {
     fontSize: FontSize.xs,
-    color: Colors.gray600,
+    color: Colors.gray500,
     fontWeight: FontWeight.medium,
-    textAlign: 'center',
   },
   kpiValue: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
-    textAlign: 'center',
   },
 });
