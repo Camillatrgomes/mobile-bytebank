@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -43,9 +41,10 @@ export default function TransactionDetailScreen() {
     setIsDeleting(true);
     try {
       await apiFetch(`/account/transaction/${id}`, { method: 'DELETE' });
-      await revalidateAccount();
       toast('Transação excluída', 'success');
       router.back();
+      // Revalidate after navigating to avoid re-render with missing transaction
+      revalidateAccount();
     } catch (err: any) {
       toast(err.message ?? 'Erro ao excluir', 'error');
     } finally {

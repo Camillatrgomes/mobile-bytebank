@@ -52,7 +52,7 @@ const serverPromise = connectDB().then(async () => {
                 const accountCreated = await saveAccount({ account: new accountDTO({ userId: userCreated.id, type: 'Debit' }), repository: accountRepository });
                 const firstCard = new cardDTO({ 
                   type: 'GOLD', number: 13748712374891010, dueDate: '2027-01-07', functions: 'Debit',
-                  cvc: '505', paymentDate: null, name: userCreated.username, accountId: accountCreated.id, type: 'Debit' 
+                  cvc: '505', paymentDate: null, name: userCreated.username, accountId: accountCreated.id
                 });
                 await saveCard({ card: firstCard, repository: cardRepository });
                 console.log('✅ Usuário de teste criado: teste@teste.com / 123');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
@@ -9,7 +9,7 @@ import { SkeletonCard } from '@/components/atoms/Skeleton';
 import { useTransactionList } from '@/hooks/useTransactionList';
 import { getLastMonths } from '@/lib/formatters';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
-import { PiggyBank, CalendarSearch } from 'lucide-react-native';
+import { PiggyBank } from 'lucide-react-native';
 
 const FULL_MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',

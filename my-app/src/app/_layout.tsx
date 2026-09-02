@@ -1,5 +1,3 @@
-import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
 import { Provider } from 'react-redux';
 import { SWRConfig } from 'swr';
 import { store } from '@/store';

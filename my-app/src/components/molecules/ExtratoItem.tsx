@@ -1,9 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
+import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { Badge } from '@/components/atoms/Badge';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
 import type { IApiTransaction } from '@/hooks/useAccount';
 

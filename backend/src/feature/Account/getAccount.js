@@ -4,7 +4,7 @@ const getAccount = async ({
   filter, repository
 }) => {
   const result = await repository.get(filter)
-  return result?.map(user => new Account(user))
+  return result?.map(account => new Account(account))
 }
 
 module.exports = getAccount

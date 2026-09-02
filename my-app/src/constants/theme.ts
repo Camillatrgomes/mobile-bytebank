@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 
 // ByteBank Design System — Color Palette and Spacing
 export const Colors = {
@@ -98,13 +97,3 @@ export const FontWeight = {
   bold: '700' as const,
 };
 
-// Compat aliases (legacy — keep for existing files)
-export const BottomTabInset = 80;
-export const MaxContentWidth = 600;
-
-// Legacy exports for old template components (themed-text, themed-view, app-tabs)
-export const Fonts = {
-  mono: Platform.select({ ios: 'Inter', android: 'Inter', default: 'Inter' }) as string,
-};
-
-export type ThemeColor = 'text' | 'textSecondary' | 'background' | 'backgroundElement' | 'backgroundSelected';

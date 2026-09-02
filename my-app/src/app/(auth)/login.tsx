@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -6,7 +5,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View, Image,
+  View, 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';

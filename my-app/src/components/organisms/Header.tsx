@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSelector } from 'react-redux';
-import { router, useRouter } from 'expo-router';
-import { useAuth } from '@/hooks/useAuth';
+import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
-import { LogOut, ChevronDown, User } from 'lucide-react-native';
+import { User } from 'lucide-react-native';
 import type { RootState } from '@/store';
 
 interface HeaderProps {
@@ -14,8 +12,6 @@ interface HeaderProps {
 
 export function Header({ title, showLogout = false }: HeaderProps) {
   const user = useSelector((s: RootState) => s.auth.user);
-  const { logout } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <View style={styles.header}>
@@ -48,6 +44,7 @@ export function Header({ title, showLogout = false }: HeaderProps) {
 
     </View>
   );
+  
 }
 
 const styles = StyleSheet.create({

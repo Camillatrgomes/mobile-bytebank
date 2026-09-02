@@ -123,7 +123,7 @@ describe('Financial manager API', () => {
       .get(`/account/${accountId}/statement`)
       .set('Authorization', `Bearer ${token}`)
 
-    expect(response.status).toBe(201)
+    expect(response.status).toBe(200)
     expect(response.body).toHaveProperty('result.transactions')
 
     const transactions = response.body.result.transactions
@@ -144,7 +144,7 @@ describe('Financial manager API', () => {
       .get(`/account/${accountId}/statement`)
       .set('Authorization', `Bearer ${token}`)
 
-    expect(response.status).toBe(201)
+    expect(response.status).toBe(200)
     expect(response.body).toHaveProperty('result.transactions')
 
     const transactions = response.body.result.transactions

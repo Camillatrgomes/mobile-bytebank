@@ -32,17 +32,16 @@ class UserController {
 
       const firstCard = new cardDTO({ 
         type: 'GOLD',
-        number: 13748712374891010 ,
+        number: 13748712374891010,
         dueDate: '2027-01-07',
         functions: 'Debit',
         cvc: '505',
         paymentDate: null,
         name: userCreated.username,
         accountId: accountCreated.id,
-        type: 'Debit' 
       })
 
-      const cardCreated = await saveCard({ card: firstCard, repository: cardRepository })
+      await saveCard({ card: firstCard, repository: cardRepository })
 
       res.status(201).json({
         message: 'usuário criado com sucesso',
@@ -54,6 +53,33 @@ class UserController {
     }
 
   }
+
+  async update(req, res) {
+    const { userRepository } = this.di
+    const { id } = req.params
+    const { username, email } = req.body
+
+    const updates = { username, email }
+    Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key])
+
+    try {
+      const updatedUser = await userRepository.updateById(id, updates)
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'Usuário não encontrado' })
+      }
+
+      const userResult = new userDTO(updatedUser.toJSON())
+      res.status(200).json({
+        message: 'Usuário atualizado com sucesso',
+        result: userResult,
+      })
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Erro ao atualizar usuário' })
+    }
+  }
+
   async find(req, res) {
 
     const { userRepository, getUser } = this.di

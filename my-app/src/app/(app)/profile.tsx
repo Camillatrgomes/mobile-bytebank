@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -10,15 +9,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSelector } from 'react-redux';
 import { useAuth } from '@/hooks/useAuth';
 import { apiFetch } from '@/lib/api';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme';
-import { User, Mail, Pen, LogOut, ChevronRight, ShieldCheck, X, Check } from 'lucide-react-native';
+import { User, Mail, Pen, LogOut, ChevronRight, ShieldCheck } from 'lucide-react-native';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { Button } from '@/components/atoms/Button';
 import { Modal } from '@/components/atoms/Modal';
-import type { RootState } from '@/store';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '@/store/authSlice';
 import type { AppDispatch } from '@/store';

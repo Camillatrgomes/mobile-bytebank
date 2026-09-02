@@ -1,9 +1,8 @@
-import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/atoms/Button';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme';
+import { Spacing, FontSize, BorderRadius } from '@/constants/theme';
 
 export default function LandingScreen() {
   const router = useRouter();
