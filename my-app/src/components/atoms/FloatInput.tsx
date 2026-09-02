@@ -53,10 +53,11 @@ export function FloatInput({ label, error, isPassword = false, style, ...props }
         {isPassword && (
 
      <TouchableOpacity
+          style={styles.eyeButton}
           onPress={() => setShowPassword((v) => !v)}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          {showPassword ? <EyeOff color={Colors.white} size={22} /> : <Eye color={Colors.white} size={22} />}
+          {showPassword ? <EyeOff color={Colors.gray500} size={22} /> : <Eye color={Colors.gray500} size={22} />}
         </TouchableOpacity>
         )}
       </View>

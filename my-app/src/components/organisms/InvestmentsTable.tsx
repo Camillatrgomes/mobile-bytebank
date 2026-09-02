@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
-import { Picker } from '@react-native-picker/picker';
 import type { ITransaction } from '../../hooks/useTransactionList';
 
 const COLORS = {
@@ -32,11 +31,17 @@ function formatWeekLabel(weekStart: Date): string {
   return `${fmt(weekStart)} – ${fmt(end)}`;
 }
 
+function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+}
+
 interface Props {
   transactions: ITransaction[];
 }
 
 export function InvestmentsTable({ transactions }: Props) {
+  const { width: screenWidth } = useWindowDimensions();
+
   const availableWeeks = useMemo(() => {
     const weekMap = new Map<string, Date>();
     transactions.forEach((t) => {
@@ -52,7 +57,6 @@ export function InvestmentsTable({ transactions }: Props) {
   const [selectedWeekKey, setSelectedWeekKey] = useState<string | null>(null);
   const activeWeekKey = selectedWeekKey ?? availableWeeks.at(-1)?.key ?? null;
 
-  // dados brutos por dia (mesma lógica do Next)
   const rawData = useMemo(() => {
     const dataMap = daysLabel.map((day) => ({ name: day, receita: 0, despesa: 0 }));
     if (!activeWeekKey) return dataMap;
@@ -74,75 +78,99 @@ export function InvestmentsTable({ transactions }: Props) {
     return dataMap;
   }, [transactions, activeWeekKey]);
 
-  // gifted-charts monta grupos intercalando barras + espaçamento
-  // (equivalente a duas <Bar> do Recharts lado a lado)
+  const BAR_WIDTH = 10;
+  const GROUP_INNER_SPACING = 4;
+  const GROUP_GAP = 20;
+  const chartMinWidth =
+    daysLabel.length * (BAR_WIDTH * 2 + GROUP_INNER_SPACING + GROUP_GAP);
+  const chartWidth = Math.max(chartMinWidth, screenWidth - 64);
+
   const chartData = useMemo(() => {
     return rawData.flatMap((d) => [
       {
         value: d.receita,
         label: d.name,
         frontColor: COLORS.primary,
-        spacing: 2,
+        spacing: GROUP_INNER_SPACING,
         labelTextStyle: { color: COLORS.textLight, fontSize: 11 },
       },
       {
         value: d.despesa,
         frontColor: COLORS.secondary,
-        spacing: 18,
+        spacing: GROUP_GAP,
       },
     ]);
   }, [rawData]);
+
+  const maxValue = Math.max(1, ...rawData.flatMap((d) => [d.receita, d.despesa]));
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>Resumo semanal</Text>
-
-        {availableWeeks.length > 0 ? (
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={activeWeekKey}
-              onValueChange={(value) => setSelectedWeekKey(value)}
-              style={styles.picker}
-              dropdownIconColor={COLORS.textLight}
-            >
-              {availableWeeks.map((w) => (
-                <Picker.Item key={w.key} label={w.label} value={w.key} />
-              ))}
-            </Picker>
-          </View>
-        ) : (
-          <Text style={styles.emptyText}>Nenhuma transação no mês</Text>
-        )}
       </View>
+
+      {availableWeeks.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.weekSelector}
+          contentContainerStyle={styles.weekSelectorContent}
+        >
+          {availableWeeks.map((w) => {
+            const isActive = w.key === activeWeekKey;
+            return (
+              <Pressable
+                key={w.key}
+                onPress={() => setSelectedWeekKey(w.key)}
+                style={[styles.weekChip, isActive && styles.weekChipActive]}
+              >
+                <Text style={[styles.weekChipText, isActive && styles.weekChipTextActive]}>
+                  {w.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        <Text style={styles.emptyText}>Nenhuma transação no mês</Text>
+      )}
 
       <View style={styles.legendRow}>
         <LegendDot color={COLORS.primary} label="Receitas" />
         <LegendDot color={COLORS.secondary} label="Despesas" />
       </View>
 
-      <BarChart
-        data={chartData}
-        barWidth={14}
-        barBorderRadius={4}
-        height={200}
-        noOfSections={4}
-        yAxisTextStyle={{ color: COLORS.textLight, fontSize: 11 }}
-        yAxisLabelPrefix="R$"
-        xAxisColor={COLORS.grid}
-        yAxisColor={COLORS.grid}
-        rulesColor={COLORS.grid}
-        rulesType="dashed"
-        isAnimated
-        animationDuration={800}
-        renderTooltip={(item: { value: number }) => (
-          <View style={styles.tooltip}>
-            <Text style={styles.tooltipText}>
-              R$ {item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </Text>
-          </View>
-        )}
-      />
+      {maxValue > 1 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <BarChart
+            data={chartData}
+            width={chartWidth}
+            barWidth={BAR_WIDTH}
+            barBorderRadius={4}
+            height={220}
+            maxValue={maxValue * 1.2}
+            noOfSections={4}
+            yAxisTextStyle={{ color: COLORS.textLight, fontSize: 11 }}
+            yAxisLabelPrefix="R$ "
+            xAxisColor={COLORS.grid}
+            yAxisColor={COLORS.grid}
+            rulesColor={COLORS.grid}
+            rulesType="dashed"
+            isAnimated
+            animationDuration={600}
+            renderTooltip={(item: { value: number }) => (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipText}>R$ {formatCurrency(item.value)}</Text>
+              </View>
+            )}
+          />
+        </ScrollView>
+      ) : (
+        <View style={styles.emptyChart}>
+          <Text style={styles.emptyText}>Sem movimentações nessa semana</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -168,30 +196,48 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
     color: '#4d6418',
   },
-  pickerWrapper: {
+  weekSelector: {
+    marginBottom: 12,
+  },
+  weekSelectorContent: {
+    gap: 8,
+    paddingRight: 8,
+  },
+  weekChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
-    overflow: 'hidden',
+    backgroundColor: '#F9FAFB',
   },
-  picker: {
-    width: 140,
-    height: 36,
+  weekChipActive: {
+    backgroundColor: '#6B8E23',
+    borderColor: '#6B8E23',
+  },
+  weekChipText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: COLORS.textMain,
+  },
+  weekChipTextActive: {
+    color: '#FFFFFF',
   },
   emptyText: {
     fontSize: 13,
     color: COLORS.textLight,
+  },
+  emptyChart: {
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   legendRow: {
     flexDirection: 'row',
@@ -207,7 +253,6 @@ const styles = StyleSheet.create({
   legendDot: {
     width: 8,
     height: 8,
-    padding: 2,
     borderRadius: 4,
   },
   legendLabel: {

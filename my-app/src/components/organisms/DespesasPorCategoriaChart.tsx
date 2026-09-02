@@ -4,6 +4,7 @@ import { PieChart } from 'react-native-chart-kit';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { formatCurrency } from '@/lib/formatters';
 import type { IApiTransaction } from '@/hooks/useAccount';
+import { AlignCenter } from 'lucide-react-native';
 
 interface DespesasPorCategoriaChartProps {
   transactions: IApiTransaction[];
@@ -48,25 +49,27 @@ export function DespesasPorCategoriaChart({ transactions, isLoading }: DespesasP
         </View>
       ) : (
         <>
-          <PieChart
-            data={data}
-            width={screenWidth - Spacing.five * 2 - Spacing.six * 2}
-            height={200}
-            chartConfig={{
-              color: () => Colors.primary600,
-              labelColor: () => Colors.gray700,
-              backgroundGradientFrom: '#fff',
-              backgroundGradientTo: '#fff',
-            }}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute={false}
-            hasLegend
-          />
+<View style={styles.chartWrapper}>
+  <PieChart
+    data={data}
+    width={screenWidth - Spacing.five * 2 - Spacing.six * 2}
+    height={200}
+    chartConfig={{
+      color: () => Colors.primary600,
+      labelColor: () => Colors.gray700,
+      backgroundGradientFrom: '#fff',
+      backgroundGradientTo: '#fff',
+    }}
+    accessor="population"
+    backgroundColor="transparent"
+    paddingLeft="0"
+    center={[screenWidth / 4 - Spacing.five - Spacing.six, 0]}
+    absolute={false}
+    hasLegend={false}
+  />
+</View>
 
-          {/* Category breakdown list — mirrors MFE "summary" */}
-          <View style={styles.breakdownList}>
+<View style={styles.breakdownList}>
             {data.map((d, i) => (
               <View key={d.name} style={styles.breakdownRow}>
                 <View style={[styles.dot, { backgroundColor: d.color }]} />
@@ -94,6 +97,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 24,
     elevation: 5,
+  },
+  chartWrapper: {
+    alignItems: 'center',
   },
   title: {
     fontSize: FontSize.lg,
@@ -123,6 +129,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     textAlign: 'center',
     lineHeight: 18,
+    fontFamily: 'Inter_400Regular',
   },
   breakdownList: {
     marginTop: Spacing.three,
@@ -147,18 +154,21 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.gray700,
     fontWeight: FontWeight.medium,
+    fontFamily: 'Inter_400Regular',
   },
   breakdownPct: {
     fontSize: FontSize.xs,
     color: Colors.gray500,
-    width: 32,
-    textAlign: 'right',
+    width: 52,
+    textAlign: 'left',
+    fontFamily: 'Inter_400Regular',
   },
   breakdownValue: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.semibold,
     color: Colors.gray800,
-    width: 80,
+    width: 100,
+    fontFamily: 'Inter_400Regular',
     textAlign: 'right',
   },
 });

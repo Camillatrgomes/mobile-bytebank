@@ -19,6 +19,8 @@ export function InvestmentsPieChart({ data }: InvestmentsPieChartProps) {
     legendFontSize: 12,
   }));
 
+  const total = chartData.reduce((s, d) => s + d.population, 0);
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Distribuição por Categoria</Text>
@@ -29,21 +31,38 @@ export function InvestmentsPieChart({ data }: InvestmentsPieChartProps) {
           <Text style={styles.emptySubtext}>Selecione outro mês ou registre transações.</Text>
         </View>
       ) : (
-        <PieChart
-          data={chartData}
-          width={screenWidth - Spacing.four * 2 - Spacing.six * 2}
-          height={200}
-          chartConfig={{
-            color: () => Colors.primary600,
-            labelColor: () => Colors.gray700,
-            backgroundGradientFrom: '#fff',
-            backgroundGradientTo: '#fff',
-          }}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          hasLegend
-        />
+        <>
+          <View style={styles.chartWrapper}>
+            <PieChart
+              data={chartData}
+              width={screenWidth - Spacing.four * 2 - Spacing.six * 2}
+              height={200}
+              chartConfig={{
+                color: () => Colors.primary600,
+                labelColor: () => Colors.gray700,
+                backgroundGradientFrom: '#fff',
+                backgroundGradientTo: '#fff',
+              }}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="0"
+              center={[screenWidth / 4 - Spacing.four - Spacing.six, 0]}
+              hasLegend={false}
+            />
+          </View>
+
+          <View style={styles.breakdownList}>
+            {chartData.map((d) => (
+              <View key={d.name} style={styles.breakdownRow}>
+                <View style={[styles.dot, { backgroundColor: d.color }]} />
+                <Text style={styles.breakdownName} numberOfLines={1}>{d.name}</Text>
+                <Text style={styles.breakdownPct}>
+                  {total > 0 ? Math.round((d.population / total) * 100) : 0}%
+                </Text>
+              </View>
+            ))}
+          </View>
+        </>
       )}
     </View>
   );
@@ -66,6 +85,9 @@ const styles = StyleSheet.create({
     color: Colors.gray900,
     marginBottom: Spacing.four,
   },
+  chartWrapper: {
+    alignItems: 'center',
+  },
   emptyState: {
     height: 160,
     alignItems: 'center',
@@ -82,5 +104,35 @@ const styles = StyleSheet.create({
     color: Colors.gray400,
     fontSize: FontSize.xs,
     textAlign: 'center',
+  },
+  breakdownList: {
+    marginTop: Spacing.three,
+    gap: Spacing.two,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray200,
+    paddingTop: Spacing.three,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    flexShrink: 0,
+  },
+  breakdownName: {
+    flex: 1,
+    fontSize: FontSize.xs,
+    color: Colors.gray700,
+    fontWeight: FontWeight.medium,
+  },
+  breakdownPct: {
+    fontSize: FontSize.xs,
+    color: Colors.gray500,
+    width: 32,
+    textAlign: 'right',
   },
 });

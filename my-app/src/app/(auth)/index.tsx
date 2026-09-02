@@ -14,66 +14,68 @@ export default function LandingScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header like Web */}
-        <View style={styles.header}>
-          <View style={styles.brand}>
-            <Image source={require('@/assets/images/bblogo.png')} style={styles.logo} />
-            <View>
-              <Text style={styles.appName}><Text style={{fontWeight: '300'}}>byte</Text><Text style={{fontWeight: 'bold'}}>bank</Text></Text>
-              <Text style={styles.tagline}>PLANNER FINANCEIRO</Text>
+        <View style={styles.mainContent}>
+          {/* Header like Web */}
+          <View style={styles.header}>
+            <View style={styles.brand}>
+              <Image source={require('@/assets/images/bblogo.png')} style={styles.logo} />
+              <View>
+                <Text style={styles.appName}><Text style={{fontWeight: '300'}}>byte</Text><Text style={{fontWeight: 'bold'}}>bank</Text></Text>
+                <Text style={styles.tagline}>PLANNER FINANCEIRO</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Hero section */}
-        <View style={styles.hero}>
-          <Text style={styles.heroHeading}>
-            Experimente mais liberdade no controle da sua vida financeira. Crie sua conta com a gente!
-          </Text>
-          <Image 
-            source={require('@/assets/images/welcome.png')} 
-            style={[styles.heroImage, { height: width * 0.6 }]} 
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Vantagens */}
-        <View style={styles.vantagens}>
-          <Text style={styles.vantagensTitle}>Vantagens do nosso banco:</Text>
-          <View style={styles.featuresList}>
-            {[
-              { img: require('@/assets/images/gift.png'), title: 'Conta e cartão gratuitos', desc: 'Isso mesmo, nossa conta é digital, sem custo fixo e mais que isso: sem tarifa de manutenção.' },
-              { img: require('@/assets/images/wallet.png'), title: 'Saques sem custo', desc: 'Você pode sacar gratuitamente 4x por mês de qualquer Banco 24h.' },
-              { img: require('@/assets/images/star.png'), title: 'Programa de pontos', desc: 'Você pode acumular pontos com suas compras no crédito sem pagar mensalidade!' },
-              { img: require('@/assets/images/pc.png'), title: 'Seguro dispositivos', desc: 'Seus dispositivos móveis (computador e laptop) protegidos por uma mensalidade simbólica.' },
-            ].map((v, i) => (
-              <View key={i} style={styles.featureItem}>
-                <Image source={v.img} style={styles.featureIcon} />
-                <Text style={styles.featureTitle}>{v.title}</Text>
-                <Text style={styles.featureDesc}>{v.desc}</Text>
-              </View>
-            ))}
+          {/* Hero section */}
+          <View style={styles.hero}>
+            <Text style={styles.heroHeading}>
+              Experimente mais liberdade no controle da sua vida financeira. Crie sua conta com a gente!
+            </Text>
+            <Image 
+              source={require('@/assets/images/welcome.png')} 
+              style={[styles.heroImage, { height: width * 0.6 }]} 
+              resizeMode="contain"
+            />
           </View>
-        </View>
 
-        {/* CTA Buttons */}
-        <View style={styles.ctas}>
-          <Button
-            variant="primary"
-            fullWidth
-            size="lg"
-            onPress={() => router.push('/(auth)/register')}
-          >
-            Abrir minha conta
-          </Button>
-          <Button
-            variant="outline"
-            fullWidth
-            size="lg"
-            onPress={() => router.push('/(auth)/login')}
-          >
-            Já tenho conta
-          </Button>
+          {/* Vantagens */}
+          <View style={styles.vantagens}>
+            <Text style={styles.vantagensTitle}>Vantagens do nosso banco:</Text>
+            <View style={styles.featuresList}>
+              {[
+                { img: require('@/assets/images/gift.png'), title: 'Conta e cartão gratuitos', desc: 'Isso mesmo, nossa conta é digital, sem custo fixo e mais que isso: sem tarifa de manutenção.' },
+                { img: require('@/assets/images/wallet.png'), title: 'Saques sem custo', desc: 'Você pode sacar gratuitamente 4x por mês de qualquer Banco 24h.' },
+                { img: require('@/assets/images/star.png'), title: 'Programa de pontos', desc: 'Você pode acumular pontos com suas compras no crédito sem pagar mensalidade!' },
+                { img: require('@/assets/images/pc.png'), title: 'Seguro dispositivos', desc: 'Seus dispositivos móveis (computador e laptop) protegidos por uma mensalidade simbólica.' },
+              ].map((v, i) => (
+                <View key={i} style={styles.featureItem}>
+                  <Image source={v.img} style={styles.featureIcon} />
+                  <Text style={styles.featureTitle}>{v.title}</Text>
+                  <Text style={styles.featureDesc}>{v.desc}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* CTA Buttons */}
+          <View style={styles.ctas}>
+            <Button
+              variant="primary"
+              fullWidth
+              size="lg"
+              onPress={() => router.push('/(auth)/register')}
+            >
+              Abrir minha conta
+            </Button>
+            <Button
+              variant="outline"
+              fullWidth
+              size="lg"
+              onPress={() => router.push('/(auth)/login')}
+            >
+              Já tenho conta
+            </Button>
+          </View>
         </View>
 
         {/* Footer */}
@@ -91,7 +93,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   container: {
-    paddingBottom: Spacing.eight,
+    flexGrow: 1,
+  },
+  mainContent: {
+    flex: 1,
   },
   header: {
     paddingHorizontal: Spacing.five,
