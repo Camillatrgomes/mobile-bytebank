@@ -16,11 +16,57 @@ interface ExtratoListProps {
   showViewAll?: boolean;
 }
 
+/** Cabeçalho do card de extrato, com o divisor abaixo. */
+export function ExtratoCardHeader() {
+  return (
+    <>
+      <View style={extratoStyles.cardHeader}>
+        <Text style={extratoStyles.cardTitle}>Extrato</Text>
+      </View>
+      <View style={extratoStyles.divider} />
+    </>
+  );
+}
+
+/** Estado vazio do extrato, com CTA opcional para criar a primeira transação. */
+export function ExtratoEmptyState({
+  message = 'Nenhuma transação por aqui ainda',
+  onNewTransaction,
+}: {
+  message?: string;
+  onNewTransaction?: () => void;
+}) {
+  return (
+    <View style={extratoStyles.emptyState}>
+      <View style={extratoStyles.emptyIconBg}>
+        <Receipt size={24} color={Colors.primary600} />
+      </View>
+      <Text style={extratoStyles.emptyTitle}>{message}</Text>
+      <Text style={extratoStyles.emptySubtext}>
+        Que tal registrar sua primeira receita ou despesa?
+      </Text>
+      {onNewTransaction && (
+        <TouchableOpacity style={extratoStyles.emptyBtn} onPress={onNewTransaction}>
+          <Plus size={14} color={Colors.white} />
+          <Text style={extratoStyles.emptyBtnText}>Nova transação</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+/**
+ * Extrato em card, renderizando a lista inteira de uma vez.
+ *
+ * Usado onde a lista é curta e previsível (os 5 lançamentos recentes da home).
+ * Para a lista completa e paginada, use ExtratoListInfinite, que virtualiza
+ * com FlatList.
+ */
 export function ExtratoList({
   transactions,
   isLoading,
   compact = false,
-  emptyMessage = 'Nenhuma transação ainda',
+  emptyMessage,
   onNewTransaction,
   showViewAll = false,
 }: ExtratoListProps) {
@@ -28,42 +74,23 @@ export function ExtratoList({
   const data = compact ? transactions.slice(0, 5) : transactions;
 
   return (
-    <View style={styles.card}>
-      {/* Card header */}
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>Extrato</Text>
-      </View>
-
-      <View style={styles.divider} />
+    <View style={extratoStyles.card}>
+      <ExtratoCardHeader />
 
       {/* Content */}
       {isLoading ? (
-        <View style={styles.skeletonContainer}>
+        <View style={extratoStyles.skeletonContainer}>
           {[1, 2, 3].map((i) => (
-            <View key={i} style={styles.skeletonRow}>
+            <View key={i} style={extratoStyles.skeletonRow}>
               <SkeletonCard lines={2} />
             </View>
           ))}
         </View>
       ) : data.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIconBg}>
-            <Receipt size={24} color={Colors.primary600} />
-          </View>
-          <Text style={styles.emptyTitle}>Nenhuma transação por aqui ainda</Text>
-          <Text style={styles.emptySubtext}>
-            Que tal registrar sua primeira receita ou despesa?
-          </Text>
-          {onNewTransaction && (
-            <TouchableOpacity style={styles.emptyBtn} onPress={onNewTransaction}>
-              <Plus size={14} color={Colors.white} />
-              <Text style={styles.emptyBtnText}>Nova transação</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <ExtratoEmptyState message={emptyMessage} onNewTransaction={onNewTransaction} />
       ) : (
         <>
-          <View style={styles.transactionsList}>
+          <View style={extratoStyles.transactionsList}>
             {data.map((item) => (
               <ExtratoItem
                 key={item.id}
@@ -78,12 +105,12 @@ export function ExtratoList({
 
           {showViewAll && (
             <>
-              <View style={styles.divider} />
+              <View style={extratoStyles.divider} />
               <TouchableOpacity
-                style={styles.viewAllBtn}
+                style={extratoStyles.viewAllBtn}
                 onPress={() => router.push('/(app)/transactions')}
               >
-                <Text style={styles.viewAllText}>Ver todas as transações</Text>
+                <Text style={extratoStyles.viewAllText}>Ver todas as transações</Text>
               </TouchableOpacity>
             </>
           )}
@@ -93,7 +120,7 @@ export function ExtratoList({
   );
 }
 
-const styles = StyleSheet.create({
+export const extratoStyles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
     borderRadius: 15,
