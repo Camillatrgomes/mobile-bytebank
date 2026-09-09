@@ -20,7 +20,7 @@ export default function InvestmentsScreen() {
   const months = getLastMonths(6);
   const [selectedMonth, setSelectedMonth] = useState(months[0].value);
 
-  const { transactions, receitas, despesas, lucro, byCategory, isLoading } =
+  const { transactions, receitas, despesas, lucro, byCategory, isLoading, mutate } =
     useTransactionList(selectedMonth);
 
   return (
@@ -30,7 +30,7 @@ export default function InvestmentsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => {}} />}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => mutate()} />}
       >
         {/* Header card like MFE */}
         <View style={styles.headerCard}>

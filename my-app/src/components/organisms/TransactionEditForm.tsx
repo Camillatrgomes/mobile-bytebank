@@ -48,6 +48,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -62,8 +63,13 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
   const type = watch('type');
   const categories = type === 'Credit' ? CREDIT_CATEGORIES : DEBIT_CATEGORIES;
 
+  // Limpa a categoria apenas quando ela não existe na lista do tipo selecionado.
+  // Limpar incondicionalmente apagava a categoria pré-carregada na montagem.
   useEffect(() => {
-    setValue('category', '');
+    const current = getValues('category');
+    if (current && !categories.includes(current as never)) {
+      setValue('category', '');
+    }
   }, [type]);
 
   async function onSubmit(data: FormData) {
