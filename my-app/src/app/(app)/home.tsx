@@ -1,4 +1,4 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { Header } from '@/components/organisms/Header';
@@ -8,6 +8,7 @@ import { ExtratoList } from '@/components/organisms/ExtratoList';
 import { DespesasPorCategoriaChart } from '@/components/organisms/DespesasPorCategoriaChart';
 import { TransactionForm } from '@/components/organisms/TransactionForm';
 import { Button } from '@/components/atoms/Button';
+import { FadeInView } from '@/components/atoms/FadeInView';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
 import { useAccount } from '@/hooks/useAccount';
 import { openModal } from '@/store/transactionFormSlice';
@@ -51,31 +52,37 @@ export default function HomeScreen() {
         ) : (
           <>
             {/* Balance Card */}
-            <SaldoDashboard saldo={saldo} metaMessage={metaMessage}>
-              <ReceitasDespesasCard receitas={receitas} despesas={despesas} />
-            </SaldoDashboard>
+            <FadeInView delay={0}>
+              <SaldoDashboard saldo={saldo} metaMessage={metaMessage}>
+                <ReceitasDespesasCard receitas={receitas} despesas={despesas} />
+              </SaldoDashboard>
+            </FadeInView>
 
             {/* New Transaction Button */}
-            <Button
-              variant="primary"
-              fullWidth
-              size="lg"
-              onPress={() => dispatch(openModal())}
-            >
-              + Nova Transação
-            </Button>
+            <FadeInView delay={80}>
+              <Button
+                variant="primary"
+                fullWidth
+                size="lg"
+                onPress={() => dispatch(openModal())}
+              >
+                + Nova Transação
+              </Button>
+            </FadeInView>
 
             {/* Expenses Chart */}
-            <DespesasPorCategoriaChart transactions={transactions} />
+            <FadeInView delay={160}>
+              <DespesasPorCategoriaChart transactions={transactions} />
+            </FadeInView>
 
             {/* Recent Transactions */}
-            <View style={styles.section}>
+            <FadeInView delay={240} style={styles.section}>
               <ExtratoList
                 transactions={recentTransactions}
                 compact
                 emptyMessage="Nenhuma transação ainda"
               />
-            </View>
+            </FadeInView>
           </>
         )}
       </ScrollView>

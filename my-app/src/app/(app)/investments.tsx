@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
 import { InvestmentsKPICards } from '@/components/molecules/InvestmentsKPICards';
 import { InvestmentsPieChart } from '@/components/organisms/InvestmentsPieChart';
 import { InvestmentsTable } from '@/components/organisms/InvestmentsTable';
+import { FadeInView } from '@/components/atoms/FadeInView';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
 import { useTransactionList } from '@/hooks/useTransactionList';
 import { getLastMonths } from '@/lib/formatters';
@@ -75,16 +76,24 @@ export default function InvestmentsScreen() {
             </Text>
           </View>
         ) : (
-          <>
+          /* A key faz o bloco remontar a cada troca de mês, reexecutando a
+             animação de entrada — é essa a transição entre seções. */
+          <React.Fragment key={selectedMonth}>
             {/* KPI Cards */}
-            <InvestmentsKPICards receitas={receitas} despesas={despesas} lucro={lucro} />
+            <FadeInView delay={0}>
+              <InvestmentsKPICards receitas={receitas} despesas={despesas} lucro={lucro} />
+            </FadeInView>
 
             {/* Pie Chart */}
-            <InvestmentsPieChart data={byCategory} />
+            <FadeInView delay={80}>
+              <InvestmentsPieChart data={byCategory} />
+            </FadeInView>
 
             {/* Table */}
-            <InvestmentsTable transactions={transactions} />
-          </>
+            <FadeInView delay={160}>
+              <InvestmentsTable transactions={transactions} />
+            </FadeInView>
+          </React.Fragment>
         )}
       </ScrollView>
     </SafeAreaView>
