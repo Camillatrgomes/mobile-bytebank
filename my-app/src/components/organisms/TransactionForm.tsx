@@ -52,6 +52,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     reset,
     formState: { errors },
   } = useForm<FormData>({
@@ -73,9 +74,13 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
     }
   }, [description, categories]);
 
-  // Reset category when type changes
+  // Limpa a categoria apenas quando ela não existe na lista do tipo selecionado,
+  // preservando o que já estava preenchido (inclusive categorias comuns aos dois tipos).
   useEffect(() => {
-    setValue('category', '');
+    const current = getValues('category');
+    if (current && !categories.includes(current as never)) {
+      setValue('category', '');
+    }
   }, [type]);
 
   async function onSubmit(data: FormData) {

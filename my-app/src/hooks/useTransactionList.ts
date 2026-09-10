@@ -22,7 +22,7 @@ function normalize(t: IApiTransaction): ITransaction {
 }
 
 export function useTransactionList(month?: string) {
-  const { transactions, isLoading, error } = useAccount();
+  const { transactions, isLoading, error, mutate } = useAccount();
 
   const normalized = useMemo(() => {
     let list = transactions.map(normalize);
@@ -51,5 +51,5 @@ export function useTransactionList(month?: string) {
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [normalized]);
 
-  return { transactions: normalized, receitas, despesas, lucro, byCategory, isLoading, error };
+  return { transactions: normalized, receitas, despesas, lucro, byCategory, isLoading, error, mutate };
 }
