@@ -9,7 +9,7 @@ Rodando o projeto:
     # Executar o container
     docker run -p 3000:3000 tech-challenge
 
-- Sem docker
+- Sem docker (com os emuladores do Firebase rodando — veja a seção abaixo)
 
     npm i
     npm run dev
@@ -17,7 +17,7 @@ Rodando o projeto:
 
 ### Firebase (Emulator Suite)
 
-O projeto está migrando do MongoDB para o Cloud Firestore com Firebase Auth. O desenvolvimento roda contra o **Firebase Emulator Suite**, localmente e sem custo — o projeto real (`bytebank-48663`) só é usado na validação final.
+O backend usa o Cloud Firestore e o Firebase Auth. O desenvolvimento roda contra o **Firebase Emulator Suite**, localmente e sem custo — o projeto real (`bytebank-48663`) só é usado na validação final.
 
 Pré-requisitos: [Firebase CLI](https://firebase.google.com/docs/cli) e Java. A documentação oficial pede JDK 11 ou superior; o projeto foi testado com JDK 24.
 
@@ -31,11 +31,15 @@ Em outro terminal, suba a API:
 
     npm run dev
 
+Para popular o emulador com um usuário e 60 transações de exemplo (login `teste@teste.com` / `teste123`):
+
+    npm run seed
+
 Painel dos emuladores: http://localhost:4000
 
 #### Apontando para o projeto real
 
-`npm run dev:cloud` usa o projeto Firebase real e precisa de credencial. O modo padrão (`npm run dev`) não precisa.
+`npm run dev:cloud` usa o projeto Firebase real e precisa de credencial. O modo padrão (`npm run dev`) não precisa. O seed equivalente é `npm run seed:cloud`.
 
 Copie `.env.example` para `.env` e informe o caminho absoluto da **sua** chave de conta de serviço, salva fora do repositório. Cada integrante gera a própria em *Console do Firebase → Configurações do projeto → Contas de serviço*. Alternativa sem arquivo: `gcloud auth application-default login`.
 
