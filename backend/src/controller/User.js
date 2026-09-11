@@ -1,125 +1,55 @@
-const userDTO = require('../models/User')
 const accountDTO = require('../models/Account')
 const cardDTO = require('../models/Card')
-const jwt = require('jsonwebtoken')
-const JWT_SECRET = 'tech-challenge'
 
 class UserController {
   constructor(di = {}) {
     this.di = Object.assign({
-      userRepository: require('../infra/mongoose/repository/userRepository'),
       accountRepository: require('../infra/mongoose/repository/accountRepository'),
       cardRepository: require('../infra/mongoose/repository/cardRepository'),
 
-      saveCard: require('../feature/Card/saveCard'),
-      salvarUsuario: require('../feature/User/salvarUsuario'),
+      getAccount: require('../feature/Account/getAccount'),
       saveAccount: require('../feature/Account/saveAccount'),
-      getUser: require('../feature/User/getUser'),
+      saveCard: require('../feature/Card/saveCard'),
     }, di)
   }
 
   async create(req, res) {
-    const user = new userDTO(req.body)
-    const { userRepository, accountRepository, cardRepository, salvarUsuario, saveAccount, saveCard } = this.di
+    const { accountRepository, cardRepository, getAccount, saveAccount, saveCard } = this.di
+    const userId = req.user.id
 
-    if (!user.isValid()) return res.status(400).json({ 'message': 'não houve informações enviadas' })
     try {
-      const userCreated = await salvarUsuario({
-        user, repository: userRepository
-      })
+      const [existingAccount] = await getAccount({ repository: accountRepository, filter: { userId } })
+      if (existingAccount) {
+        return res.status(200).json({
+          message: 'Conta já provisionada',
+          result: { accountId: existingAccount.id },
+        })
+      }
 
-      const accountCreated = await saveAccount({ account: new accountDTO({ userId: userCreated.id, type: 'Debit' }), repository: accountRepository })
+      const accountCreated = await saveAccount({ account: new accountDTO({ userId, type: 'Debit' }), repository: accountRepository })
 
-      const firstCard = new cardDTO({ 
+      const firstCard = new cardDTO({
         type: 'GOLD',
         number: 13748712374891010,
         dueDate: '2027-01-07',
         functions: 'Debit',
         cvc: '505',
         paymentDate: null,
-        name: userCreated.username,
+        name: req.body.username || req.user.email,
         accountId: accountCreated.id,
       })
 
       await saveCard({ card: firstCard, repository: cardRepository })
 
       res.status(201).json({
-        message: 'usuário criado com sucesso',
-        result: userCreated,
+        message: 'Conta provisionada com sucesso',
+        result: { accountId: accountCreated.id },
       })
     } catch (error) {
       console.log(error)
       res.status(500).json({ message: 'caiu a aplicação' })
     }
-
-  }
-
-  async update(req, res) {
-    const { userRepository } = this.di
-    const { id } = req.params
-    const { username, email } = req.body
-
-    const updates = { username, email }
-    Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key])
-
-    try {
-      const updatedUser = await userRepository.updateById(id, updates)
-
-      if (!updatedUser) {
-        return res.status(404).json({ message: 'Usuário não encontrado' })
-      }
-
-      const userResult = new userDTO(updatedUser.toJSON())
-      res.status(200).json({
-        message: 'Usuário atualizado com sucesso',
-        result: userResult,
-      })
-    } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: 'Erro ao atualizar usuário' })
-    }
-  }
-
-  async find(req, res) {
-
-    const { userRepository, getUser } = this.di
-    try {
-      const users = await getUser({ repository: userRepository })
-      res.status(200).json({
-        message: 'Usuário carregado com sucesso',
-        result: users
-      })
-    } catch (error) {
-      res.status(500).json({
-        message: 'Erro no servidor'
-      })
-    }
-    
-  }
-  async auth(req, res) {
-    const { userRepository, getUser } = this.di
-    const { email, password } = req.body
-    const user = await getUser({ repository: userRepository, userFilter: { email, password } })
-    
-    if (!user?.[0]) return res.status(401).json({ message: 'Usuário não encontrado' })
-    const userToTokenize = {...user[0], id: user[0].id.toString()}
-    res.status(200).json({
-      message: 'Usuário autenticado com sucesso',
-      result: {
-        token: jwt.sign(userToTokenize, JWT_SECRET, { expiresIn: '12h' })
-      }
-    })
-  }
-  static getToken(token) {
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET)
-        return decoded
-    } catch (error) {
-        return null
-    }
   }
 }
-
-
 
 module.exports = UserController

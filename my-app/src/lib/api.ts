@@ -1,6 +1,5 @@
-import { storage } from './storage';
-
 import { Platform } from 'react-native';
+import { auth } from './firebase';
 
 // Use 10.0.2.2 for Android emulator, localhost for Web/iOS
 // Change to your machine's IP (e.g. 192.168.1.X) for physical device testing
@@ -10,17 +9,15 @@ export const BASE_URL = isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   body?: unknown;
-  token?: string | null;
 };
 
 export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { method = 'GET', body, token } = options;
+  const { method = 'GET', body } = options;
 
-  // Get token from secure store if not explicitly provided
-  const authToken = token !== undefined ? token : await storage.getToken();
+  const authToken = await auth.currentUser?.getIdToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
