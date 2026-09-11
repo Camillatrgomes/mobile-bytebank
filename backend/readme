@@ -9,10 +9,41 @@ Rodando o projeto:
     # Executar o container
     docker run -p 3000:3000 tech-challenge
 
-- Sem docker
+- Sem docker (com os emuladores do Firebase rodando — veja a seção abaixo)
 
     npm i
     npm run dev
+
+
+### Firebase (Emulator Suite)
+
+O backend usa o Cloud Firestore e o Firebase Auth. O desenvolvimento roda contra o **Firebase Emulator Suite**, localmente e sem custo — o projeto real (`bytebank-48663`) só é usado na validação final.
+
+Pré-requisitos: [Firebase CLI](https://firebase.google.com/docs/cli) e Java. A documentação oficial pede JDK 11 ou superior; o projeto foi testado com JDK 24.
+
+    npm install -g firebase-tools
+
+Em um terminal, suba os emuladores (os dados ficam salvos em `.emulator-data/`, na raiz, entre execuções):
+
+    npm run emulators
+
+Em outro terminal, suba a API:
+
+    npm run dev
+
+Para popular o emulador com um usuário e 60 transações de exemplo (login `teste@teste.com` / `teste123`):
+
+    npm run seed
+
+Painel dos emuladores: http://localhost:4000
+
+#### Apontando para o projeto real
+
+`npm run dev:cloud` usa o projeto Firebase real e precisa de credencial. O modo padrão (`npm run dev`) não precisa. O seed equivalente é `npm run seed:cloud`.
+
+Copie `.env.example` para `.env` e informe o caminho absoluto da **sua** chave de conta de serviço, salva fora do repositório. Cada integrante gera a própria em *Console do Firebase → Configurações do projeto → Contas de serviço*. Alternativa sem arquivo: `gcloud auth application-default login`.
+
+**Nunca compartilhe o arquivo da chave** por chat, Drive ou e-mail: ele ignora as Security Rules e dá acesso administrativo ao banco inteiro.
 
 
 ### Importando collection no postman
@@ -29,70 +60,22 @@ após realizar a importação você terá todo os Requests desse projeto.
 para acessar o Swagger basta você entrar na rota /docs
 as rotas que necessitam de Autenticação você pode colar o Bearer token no cadeado
 
-### Autenticando 
+### Autenticação
 
-#### Criando usuário
-    "http:localhost:3000/user"
-    body:
+A autenticação é feita pelo **Firebase Auth** (e-mail e senha), direto no app. A API não emite token: todas as rotas exigem o ID token do Firebase do usuário logado.
+
+    Authorization: Bearer {{ID_TOKEN}}
+
+#### Provisionando a conta
+Depois de criar o usuário no Firebase Auth, o app chama esta rota para criar a conta e o cartão. Se a conta já existir, a rota apenas a devolve.
+
+    "localhost:3000/user"
+
+    Authorization: Bearer {{ID_TOKEN}}
+    Body:
         {
-            "username": "Aluno Carequinha",
-            "email": "teste@gmail.com",
-            "password": "testes"
-        }  
-
-    cURL
-    ``` 
-        curl --location 'localhost:3000/user' \
-        --header 'Content-Type: application/json' \
-        --data-raw '{
-            "username": "Aluno Carequinha",
-            "email": "teste@gmail.com",
-            "password": "testes"
-        }'
-    ```
-
-    returno:
-
-    ```
-    {
-        "message": "usuário criado com sucesso",
-        "result": {
-            "username": "Aluno Carequinha",
-            "email": "teste@gmail.com",
-            "password": "testes",
-            "id": "67607133f840bb97892eb657"
+            "username": "Aluno Carequinha"
         }
-    }
-    ```
-
-#### Autenticando
-    "localhost:3000/user/auth"
-    Body: 
-        {
-            "email": "teste@gmail.com",
-            "password": "testes"
-        }
-    cURL
-    ```
-        curl --location 'localhost:3000/user/auth' \
-        --header 'Content-Type: application/json' \
-        --data-raw '{
-            "email": "teste@gmail.com",
-            "password": "testes"
-        }'
-    ```
-
-    retorno
-    ```
-        {
-            "message": "Usuário autenticado com sucesso",
-            "result": {
-                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IklzcmFlbCAyIiwiZW1haWwiOiJ0ZXN0ZUBnbWFpbC5jb20iLCJwYXNzd29yZCI6InRlc3RlcyIsImlkIjoiNjc2MDcxMzNmODQwYmI5Nzg5MmViNjU3IiwiaWF0IjoxNzM0MzczNjg4LCJleHAiOjE3MzQ0MTY4ODh9.jtaRKSifN_j7rFWn1KkH5fykecwhXFW0G4wLqj24I-k"
-            }
-        }
-    ```
-
-    Esse Token deve user usado para realizar as chamadas das outras apis
 
 ### Conta
 

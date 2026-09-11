@@ -33,7 +33,7 @@ const options = {
       },
     ],
   },
-  apis: ['./src/routes.js', './src/publicRoutes.js'], // arquivos que contêm anotações do swagger
+  apis: ['./src/routes.js'], // arquivos que contêm anotações do swagger
 };
 
 const specs = swaggerJsdoc(options);

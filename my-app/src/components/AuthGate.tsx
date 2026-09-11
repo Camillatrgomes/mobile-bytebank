@@ -2,15 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { View, ActivityIndicator } from 'react-native';
-import { storage } from '@/lib/storage';
-import { setCredentials } from '@/store/authSlice';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { toAuthUser } from '@/hooks/useAuth';
+import { logout, setCredentials } from '@/store/authSlice';
 import type { AppDispatch, RootState } from '@/store';
 import { Colors } from '@/constants/theme';
 
-/**
- * AuthGate: Restores session from SecureStore on startup,
- * then guards routes based on authentication state.
- */
 export function AuthGate() {
   const router = useRouter();
   const segments = useSegments();
@@ -19,18 +17,18 @@ export function AuthGate() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    async function restoreSession() {
-      try {
-        const token = await storage.getToken();
-        const user = await storage.getUser();
-        if (token && user) {
-          dispatch(setCredentials(user));
-        }
-      } finally {
-        setIsReady(true);
+    let isInitialState = true;
+
+    return onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        dispatch(logout());
+      } else if (isInitialState) {
+        // Logins feitos no app só entram no Redux depois do provisionamento, em useAuth.
+        dispatch(setCredentials(toAuthUser(firebaseUser)));
       }
-    }
-    restoreSession();
+      isInitialState = false;
+      setIsReady(true);
+    });
   }, [dispatch]);
 
   useEffect(() => {
@@ -46,7 +44,7 @@ export function AuthGate() {
       // @ts-ignore — Expo Router's typed routes don't support group paths as strings
       router.replace('/(app)/home');
     }
-  }, [isAuthenticated, segments, isReady]);
+  }, [isAuthenticated, segments, isReady, router]);
 
   if (!isReady) {
     return (

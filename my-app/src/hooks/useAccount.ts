@@ -1,5 +1,6 @@
 import useSWR, { mutate as globalMutate } from 'swr';
 import { apiFetch } from '@/lib/api';
+import { revalidateStatement } from './useInfiniteStatement';
 
 export interface IApiTransaction {
   id: string;
@@ -60,5 +61,6 @@ export function useAccount() {
 }
 
 export function revalidateAccount() {
+  revalidateStatement();
   return globalMutate('/account');
 }

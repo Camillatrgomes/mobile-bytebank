@@ -134,20 +134,13 @@ router.get('/account/:accountId/statement', accountController.getStatment.bind(a
 
 /**
  * @swagger
- * /user/{id}:
- *   put:
- *     summary: Atualiza um usuário existente
+ * /user:
+ *   post:
+ *     summary: Provisiona conta e cartão do usuário autenticado
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -155,14 +148,12 @@ router.get('/account/:accountId/statement', accountController.getStatment.bind(a
  *             properties:
  *               username:
  *                 type: string
- *               email:
- *                 type: string
  *     responses:
+ *       201:
+ *         description: Conta provisionada
  *       200:
- *         description: Usuário atualizado com sucesso
- *       404:
- *         description: Usuário não encontrado
+ *         description: Conta já existia
  */
-router.put('/user/:id', userController.update.bind(userController))
+router.post('/user', userController.create.bind(userController))
 
 module.exports = router
