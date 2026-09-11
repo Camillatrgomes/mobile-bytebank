@@ -15,6 +15,33 @@ Rodando o projeto:
     npm run dev
 
 
+### Firebase (Emulator Suite)
+
+O projeto está migrando do MongoDB para o Cloud Firestore com Firebase Auth. O desenvolvimento roda contra o **Firebase Emulator Suite**, localmente e sem custo — o projeto real (`bytebank-48663`) só é usado na validação final.
+
+Pré-requisitos: [Firebase CLI](https://firebase.google.com/docs/cli) e Java. A documentação oficial pede JDK 11 ou superior; o projeto foi testado com JDK 24.
+
+    npm install -g firebase-tools
+
+Em um terminal, suba os emuladores (os dados ficam salvos em `.emulator-data/`, na raiz, entre execuções):
+
+    npm run emulators
+
+Em outro terminal, suba a API:
+
+    npm run dev
+
+Painel dos emuladores: http://localhost:4000
+
+#### Apontando para o projeto real
+
+`npm run dev:cloud` usa o projeto Firebase real e precisa de credencial. O modo padrão (`npm run dev`) não precisa.
+
+Copie `.env.example` para `.env` e informe o caminho absoluto da **sua** chave de conta de serviço, salva fora do repositório. Cada integrante gera a própria em *Console do Firebase → Configurações do projeto → Contas de serviço*. Alternativa sem arquivo: `gcloud auth application-default login`.
+
+**Nunca compartilhe o arquivo da chave** por chat, Drive ou e-mail: ele ignora as Security Rules e dá acesso administrativo ao banco inteiro.
+
+
 ### Importando collection no postman
 - Neste projeto possui o arquivo tech-challenge-2.postman_collection que é uma collection do postman, você tendo o postman pode clicar no botão de import e selecionar esse arquivo lá na caixa de drop,
 após realizar a importação você terá todo os Requests desse projeto.

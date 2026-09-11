@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Cliente só lê o próprio extrato; escritas passam pelo backend (Admin SDK ignora as rules).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid}/transactions/{transactionId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}
