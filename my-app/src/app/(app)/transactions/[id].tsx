@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAccount, revalidateAccount } from '@/hooks/useAccount';
+import { revalidateAccount } from '@/hooks/useAccount';
+import { useTransactions } from '@/contexts/TransactionsContext';
 import { TransactionEditForm } from '@/components/organisms/TransactionEditForm';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
@@ -25,7 +26,7 @@ export default function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
-  const { transactions, isLoading } = useAccount();
+  const { transactions, isLoading } = useTransactions();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -125,7 +126,7 @@ export default function TransactionDetailScreen() {
 
         {/* Amount */}
         <Text style={[styles.amount, { color: isCredit ? Colors.income : Colors.expense }]}>
-          {isCredit ? '+' : '-'} {formatCurrency(transaction.value)}
+          {isCredit ? '+' : '-'} {formatCurrency(Math.abs(transaction.value))}
         </Text>
 
         <Text style={styles.description}>{description}</Text>

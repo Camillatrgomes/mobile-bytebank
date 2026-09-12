@@ -6,24 +6,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  setMonth,
-  setType,
-  setCategory,
-  setSearch,
-  resetFilters,
-} from '@/store/filterSlice';
+import { useTransactionFilters } from '@/contexts/TransactionsContext';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { getLastMonths } from '@/lib/formatters';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { DateRangeFilter } from '@/components/molecules/DateRangeFilter';
 import { DEBIT_CATEGORIES, CREDIT_CATEGORIES } from '@/constants/categories';
-import type { RootState, AppDispatch } from '@/store';
 
 export function FilterBar() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { month, type, category, search } = useSelector((s: RootState) => s.filter);
+  const {
+    filters: { month, type, category, search, startDate, endDate },
+    setMonth,
+    setType,
+    setCategory,
+    setSearch,
+    resetFilters,
+  } = useTransactionFilters();
+  const isAllMonths = month === '' && !startDate && !endDate;
   const months = getLastMonths(6);
   // "Outros" existe nas duas listas.
   const categories = [...new Set([...CREDIT_CATEGORIES, ...DEBIT_CATEGORIES])];
@@ -34,17 +33,25 @@ export function FilterBar() {
       <FloatInput
         label="Buscar transação..."
         value={search}
-        onChangeText={(v) => dispatch(setSearch(v))}
+        onChangeText={setSearch}
       />
 
       {/* Month filter */}
       <Text style={styles.sectionLabel}>Mês</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+        <TouchableOpacity
+          style={[styles.chip, isAllMonths && styles.chipActive]}
+          onPress={() => setMonth('')}
+        >
+          <Text style={[styles.chipText, isAllMonths && styles.chipTextActive]}>
+            Todos os meses
+          </Text>
+        </TouchableOpacity>
         {months.map((m) => (
           <TouchableOpacity
             key={m.value}
             style={[styles.chip, month === m.value && styles.chipActive]}
-            onPress={() => dispatch(setMonth(m.value))}
+            onPress={() => setMonth(m.value)}
           >
             <Text style={[styles.chipText, month === m.value && styles.chipTextActive]}>
               {m.label}
@@ -80,7 +87,7 @@ export function FilterBar() {
                       : Colors.primary600,
                 },
               ]}
-              onPress={() => dispatch(setType(val))}
+              onPress={() => setType(val)}
             >
               <Text
                 style={[
@@ -100,7 +107,7 @@ export function FilterBar() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
         <TouchableOpacity
           style={[styles.chip, category === '' && styles.chipActive]}
-          onPress={() => dispatch(setCategory(''))}
+          onPress={() => setCategory('')}
         >
           <Text style={[styles.chipText, category === '' && styles.chipTextActive]}>
             Todas
@@ -110,7 +117,7 @@ export function FilterBar() {
           <TouchableOpacity
             key={cat}
             style={[styles.chip, category === cat && styles.chipActive]}
-            onPress={() => dispatch(setCategory(cat))}
+            onPress={() => setCategory(cat)}
           >
             <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
               {cat}
@@ -120,7 +127,7 @@ export function FilterBar() {
       </ScrollView>
 
       {/* Reset */}
-      <TouchableOpacity onPress={() => dispatch(resetFilters())} style={styles.resetBtn}>
+      <TouchableOpacity onPress={resetFilters} style={styles.resetBtn}>
         <Text style={styles.resetText}>Limpar filtros</Text>
       </TouchableOpacity>
     </View>

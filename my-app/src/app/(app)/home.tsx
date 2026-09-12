@@ -1,6 +1,5 @@
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
 import { Header } from '@/components/organisms/Header';
 import { SaldoDashboard } from '@/components/organisms/SaldoDashboard';
 import { ReceitasDespesasCard } from '@/components/molecules/ReceitasDespesasCard';
@@ -10,13 +9,10 @@ import { TransactionForm } from '@/components/organisms/TransactionForm';
 import { Button } from '@/components/atoms/Button';
 import { FadeInView } from '@/components/atoms/FadeInView';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
-import { useAccount } from '@/hooks/useAccount';
-import { openModal } from '@/store/transactionFormSlice';
+import { useTransactions } from '@/contexts/TransactionsContext';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
-import type { AppDispatch } from '@/store';
 
 export default function HomeScreen() {
-  const dispatch = useDispatch<AppDispatch>();
   const {
     transactions,
     saldo,
@@ -26,7 +22,8 @@ export default function HomeScreen() {
     isLoading,
     mutate,
     metaMessage,
-  } = useAccount();
+    openForm,
+  } = useTransactions();
 
   const recentTransactions = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -64,7 +61,7 @@ export default function HomeScreen() {
                 variant="primary"
                 fullWidth
                 size="lg"
-                onPress={() => dispatch(openModal())}
+                onPress={openForm}
               >
                 + Nova Transação
               </Button>

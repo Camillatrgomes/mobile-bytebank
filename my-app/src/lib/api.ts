@@ -1,10 +1,7 @@
-import { Platform } from 'react-native';
 import { auth } from './firebase';
+import { DEV_HOST } from './devHost';
 
-// Use 10.0.2.2 for Android emulator, localhost for Web/iOS
-// Change to your machine's IP (e.g. 192.168.1.X) for physical device testing
-const isAndroid = Platform.OS === 'android';
-export const BASE_URL = isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+export const BASE_URL = `http://${DEV_HOST}:3000`;
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';

@@ -1,6 +1,6 @@
 import useSWR, { mutate as globalMutate } from 'swr';
 import { apiFetch } from '@/lib/api';
-import { revalidateStatement } from './useInfiniteStatement';
+import { revalidateStatement } from '@/lib/statementRevalidation';
 
 export interface IApiTransaction {
   id: string;
