@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Controller,
   useForm,
@@ -17,6 +17,9 @@ import { FloatInput } from '@/components/atoms/FloatInput';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/components/atoms/Toast';
 import { revalidateAccount } from '@/hooks/useAccount';
+import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
+import { uploadReceipt } from '@/lib/receipts';
+import type { DocumentPickerAsset } from 'expo-document-picker';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
@@ -42,6 +45,7 @@ interface TransactionEditFormProps {
 
 export function TransactionEditForm({ transaction, onSuccess, onCancel }: TransactionEditFormProps) {
   const toast = useToast();
+  const [receipt, setReceipt] = useState<DocumentPickerAsset | null>(null);
 
   const {
     control,
@@ -75,6 +79,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
   async function onSubmit(data: FormData) {
     try {
       const numericValue = parseFloat(data.value.replace(',', '.'));
+      const attachment = receipt ? await uploadReceipt(receipt) : {};
       await apiFetch(`/account/transaction/${transaction.id}`, {
         method: 'PUT',
         body: {
@@ -82,6 +87,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
           value: data.type === 'Debit' ? -numericValue : numericValue,
           to: data.description,
           category: data.category,
+          ...attachment,
         },
       });
 
@@ -193,6 +199,8 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
             <Text style={styles.errorText}>{errors.category.message}</Text>
           )}
         </View>
+
+        <ReceiptPicker asset={receipt} onChange={setReceipt} currentName={transaction.anexo} />
       </View>
 
       <View style={styles.actions}>

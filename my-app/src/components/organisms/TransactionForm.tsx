@@ -23,6 +23,9 @@ import { apiFetch } from '@/lib/api';
 import { suggestCategory } from '@/lib/categoryHelpers';
 import { useToast } from '@/components/atoms/Toast';
 import { revalidateAccount } from '@/hooks/useAccount';
+import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
+import { uploadReceipt } from '@/lib/receipts';
+import type { DocumentPickerAsset } from 'expo-document-picker';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
@@ -46,6 +49,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
   const isModalOpen = useSelector((s: RootState) => s.transactionForm.isModalOpen);
   const isSubmitting = useSelector((s: RootState) => s.transactionForm.isSubmitting);
   const toast = useToast();
+  const [receipt, setReceipt] = useState<DocumentPickerAsset | null>(null);
 
   const {
     control,
@@ -92,6 +96,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
     dispatch(setSubmitting(true));
     try {
       const numericValue = parseFloat(data.value.replace(',', '.'));
+      const attachment = receipt ? await uploadReceipt(receipt) : {};
       await apiFetch('/account/transaction', {
         method: 'POST',
         body: {
@@ -100,12 +105,14 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
           value: data.type === 'Debit' ? -numericValue : numericValue,
           to: data.description,
           category: data.category,
+          ...attachment,
         },
       });
 
       await revalidateAccount();
       toast('Transação criada com sucesso!', 'success');
       reset();
+      setReceipt(null);
       dispatch(closeModal());
     } catch (err: any) {
       toast(err.message ?? 'Erro ao criar transação', 'error');
@@ -116,6 +123,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
 
   function handleClose() {
     reset();
+    setReceipt(null);
     dispatch(closeModal());
   }
 
@@ -212,6 +220,8 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
               <Text style={styles.errorText}>{errors.category.message}</Text>
             )}
           </View>
+
+          <ReceiptPicker asset={receipt} onChange={setReceipt} />
         </View>
 
         <Button
