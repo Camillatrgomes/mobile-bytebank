@@ -1,9 +1,8 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSelector } from 'react-redux';
 import { router } from 'expo-router';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { User } from 'lucide-react-native';
-import type { RootState } from '@/store';
 
 interface HeaderProps {
   title?: string;
@@ -11,7 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, showLogout = false }: HeaderProps) {
-  const user = useSelector((s: RootState) => s.auth.user);
+  const { user } = useAuthContext();
 
   return (
     <View style={styles.header}>

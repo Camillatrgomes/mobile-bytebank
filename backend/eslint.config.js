@@ -10,10 +10,4 @@ module.exports = [
       globals: globals.node,
     },
   },
-  {
-    files: ['tests/**/*.js'],
-    languageOptions: {
-      globals: globals.jest,
-    },
-  },
 ]

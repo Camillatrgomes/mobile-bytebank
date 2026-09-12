@@ -10,20 +10,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
-import { updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { User, Mail, Pen, LogOut, ChevronRight, ShieldCheck } from 'lucide-react-native';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { Button } from '@/components/atoms/Button';
 import { Modal } from '@/components/atoms/Modal';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '@/store/authSlice';
-import type { AppDispatch } from '@/store';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
-  const dispatch = useDispatch<AppDispatch>();
+  const { user, logout, updateUsername } = useAuth();
 
   const [editing, setEditing] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username ?? '');
@@ -43,7 +37,7 @@ export default function ProfileScreen() {
 
   async function handleSave() {
     const username = newUsername.trim();
-    if (!auth.currentUser || !user) return;
+    if (!user) return;
     if (!username) {
       setError('Informe um nome.');
       return;
@@ -51,8 +45,7 @@ export default function ProfileScreen() {
     setError(null);
     setSaving(true);
     try {
-      await updateProfile(auth.currentUser, { displayName: username });
-      dispatch(setCredentials({ ...user, username }));
+      await updateUsername(username);
       setEditing(false);
     } catch {
       setError('Não foi possível atualizar o perfil.');

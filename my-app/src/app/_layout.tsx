@@ -1,6 +1,5 @@
-import { Provider } from 'react-redux';
 import { SWRConfig } from 'swr';
-import { store } from '@/store';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/atoms/Toast';
 import { StatusBar } from 'expo-status-bar';
 import { AuthGate } from '@/components/AuthGate';
@@ -31,7 +30,7 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <Provider store={store}>
+    <AuthProvider>
       <SWRConfig
         value={{
           revalidateOnFocus: true,
@@ -43,6 +42,6 @@ export default function RootLayout() {
           <AuthGate />
         </ToastProvider>
       </SWRConfig>
-    </Provider>
+    </AuthProvider>
   );
 }

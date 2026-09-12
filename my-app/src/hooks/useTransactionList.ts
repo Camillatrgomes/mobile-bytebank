@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useAccount, type IApiTransaction } from './useAccount';
+import { useTransactions } from '@/contexts/TransactionsContext';
+import type { IApiTransaction } from './useAccount';
 
 export interface ITransaction {
   id: string;
@@ -22,7 +23,7 @@ function normalize(t: IApiTransaction): ITransaction {
 }
 
 export function useTransactionList(month?: string) {
-  const { transactions, isLoading, error, mutate } = useAccount();
+  const { transactions, isLoading, error, mutate } = useTransactions();
 
   const normalized = useMemo(() => {
     let list = transactions.map(normalize);
