@@ -29,6 +29,8 @@ const filterSlice = createSlice({
   reducers: {
     setMonth(state, action: PayloadAction<string>) {
       state.month = action.payload;
+      state.startDate = null;
+      state.endDate = null;
     },
     setType(state, action: PayloadAction<'all' | 'Credit' | 'Debit'>) {
       state.type = action.payload;
@@ -39,11 +41,14 @@ const filterSlice = createSlice({
     setSearch(state, action: PayloadAction<string>) {
       state.search = action.payload;
     },
+    // Mês e período são exclusivos: com período o mês sai, sem período volta o mês atual.
     setDateRange(state, action: PayloadAction<{ startDate: string | null; endDate: string | null }>) {
       state.startDate = action.payload.startDate;
       state.endDate = action.payload.endDate;
+      state.month = state.startDate || state.endDate ? '' : getCurrentMonth();
     },
     resetFilters(state) {
+      state.month = getCurrentMonth();
       state.type = 'all';
       state.category = '';
       state.search = '';
