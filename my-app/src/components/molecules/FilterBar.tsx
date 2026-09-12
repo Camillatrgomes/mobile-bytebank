@@ -17,6 +17,7 @@ import {
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { getLastMonths } from '@/lib/formatters';
 import { FloatInput } from '@/components/atoms/FloatInput';
+import { DateRangeFilter } from '@/components/molecules/DateRangeFilter';
 import { DEBIT_CATEGORIES, CREDIT_CATEGORIES } from '@/constants/categories';
 import type { RootState, AppDispatch } from '@/store';
 
@@ -24,7 +25,8 @@ export function FilterBar() {
   const dispatch = useDispatch<AppDispatch>();
   const { month, type, category, search } = useSelector((s: RootState) => s.filter);
   const months = getLastMonths(6);
-  const categories = [...CREDIT_CATEGORIES, ...DEBIT_CATEGORIES];
+  // "Outros" existe nas duas listas.
+  const categories = [...new Set([...CREDIT_CATEGORIES, ...DEBIT_CATEGORIES])];
 
   return (
     <View style={styles.container}>
@@ -50,6 +52,9 @@ export function FilterBar() {
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      <Text style={styles.sectionLabel}>Período (DD/MM/AAAA)</Text>
+      <DateRangeFilter />
 
       {/* Type filter */}
       <Text style={styles.sectionLabel}>Tipo</Text>
