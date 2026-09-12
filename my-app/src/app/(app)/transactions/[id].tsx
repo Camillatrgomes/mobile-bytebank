@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -75,6 +76,8 @@ export default function TransactionDetailScreen() {
 
   const isCredit = transaction.type === 'Credit';
   const description = transaction.to ?? transaction.from ?? transaction.category ?? 'Transação';
+  // Só abre links http(s): urlAnexo chega do backend como texto livre.
+  const receiptUrl = /^https?:\/\//.test(transaction.urlAnexo ?? '') ? transaction.urlAnexo : null;
 
   if (isEditing) {
     return (
@@ -142,6 +145,16 @@ export default function TransactionDetailScreen() {
           )}
           {transaction.from && <DetailRow label="De" value={transaction.from} />}
           {transaction.to && <DetailRow label="Para" value={transaction.to} />}
+          {receiptUrl && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Recibo</Text>
+              <TouchableOpacity onPress={() => Linking.openURL(receiptUrl)} style={styles.receiptLink}>
+                <Text style={styles.receiptLinkText} numberOfLines={1}>
+                  {transaction.anexo ?? 'Abrir recibo'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Actions */}
@@ -286,6 +299,15 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.gray800,
     fontWeight: FontWeight.semibold,
+  },
+  receiptLink: {
+    maxWidth: '60%',
+  },
+  receiptLinkText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary600,
+    fontWeight: FontWeight.semibold,
+    textDecorationLine: 'underline',
   },
   actions: {
     width: '100%',

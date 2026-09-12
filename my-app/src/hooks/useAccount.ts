@@ -11,6 +11,8 @@ export interface IApiTransaction {
   to?: string;
   category?: string;
   date: string;
+  anexo?: string | null;
+  urlAnexo?: string | null;
 }
 
 export interface IAccountResponse {
