@@ -1,4 +1,3 @@
-import { useDispatch, useSelector } from 'react-redux';
 import { mutate } from 'swr';
 import { FirebaseError } from 'firebase/app';
 import {
@@ -6,12 +5,10 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
-  type User,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { apiFetch } from '@/lib/api';
-import { setCredentials } from '@/store/authSlice';
-import type { AppDispatch, RootState } from '@/store';
+import { toAuthUser, useAuthContext } from '@/contexts/AuthContext';
 
 interface LoginPayload {
   email: string;
@@ -48,21 +45,15 @@ async function signOutAndThrow(err: unknown): Promise<never> {
   throw toAuthError(err);
 }
 
-export function toAuthUser(user: User) {
-  return { id: user.uid, username: user.displayName ?? '', email: user.email ?? '' };
-}
-
 export function useAuth() {
-  const dispatch = useDispatch<AppDispatch>();
-  const user = useSelector((s: RootState) => s.auth.user);
-  const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
+  const { user, isAuthenticated, setUser } = useAuthContext();
 
   async function login({ email, password }: LoginPayload): Promise<void> {
     try {
       const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
       // Idempotente: recria conta e cartão se o cadastro falhou depois de criar o usuário no Auth.
       await apiFetch('/user', { method: 'POST', body: { username: firebaseUser.displayName } });
-      dispatch(setCredentials(toAuthUser(firebaseUser)));
+      setUser(toAuthUser(firebaseUser));
     } catch (err) {
       await signOutAndThrow(err);
     }
@@ -73,10 +64,16 @@ export function useAuth() {
       const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(firebaseUser, { displayName: username });
       await apiFetch('/user', { method: 'POST', body: { username } });
-      dispatch(setCredentials({ ...toAuthUser(firebaseUser), username }));
+      setUser({ ...toAuthUser(firebaseUser), username });
     } catch (err) {
       await signOutAndThrow(err);
     }
+  }
+
+  async function updateUsername(username: string): Promise<void> {
+    if (!auth.currentUser || !user) throw new Error('Sessão expirada, entre novamente');
+    await updateProfile(auth.currentUser, { displayName: username });
+    setUser({ ...user, username });
   }
 
   async function logout(): Promise<void> {
@@ -85,5 +82,5 @@ export function useAuth() {
     await mutate(() => true, undefined, { revalidate: false });
   }
 
-  return { user, isAuthenticated, login, register, logout };
+  return { user, isAuthenticated, login, register, updateUsername, logout };
 }

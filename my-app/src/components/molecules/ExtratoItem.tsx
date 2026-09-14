@@ -32,7 +32,7 @@ export function ExtratoItem({ transaction, onPress }: ExtratoItemProps) {
 
       {/* Right: value */}
       <Text style={[styles.value, isCredit ? styles.valueCredit : styles.valueDebit]}>
-        {isCredit ? '+ ' : '- '}R$ {formatCurrency(Math.abs(transaction.value))}
+        {isCredit ? '+ ' : '- '}{formatCurrency(Math.abs(transaction.value))}
       </Text>
     </TouchableOpacity>
   );

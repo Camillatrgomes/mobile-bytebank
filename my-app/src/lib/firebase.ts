@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectStorageEmulator, getStorage } from 'firebase/storage';
+import { DEV_HOST } from './devHost';
 
 declare global {
   var __bytebankFirebaseEmulator: boolean | undefined;
@@ -49,12 +50,9 @@ export const isUsingEmulator = process.env.EXPO_PUBLIC_USE_EMULATOR === '1';
 if (isUsingEmulator && !globalThis.__bytebankFirebaseEmulator) {
   globalThis.__bytebankFirebaseEmulator = true;
 
-  // Emulador Android acessa o host por 10.0.2.2.
-  const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-
-  connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
-  connectFirestoreEmulator(db, host, 8080);
-  connectStorageEmulator(storage, host, 9199);
+  connectAuthEmulator(auth, `http://${DEV_HOST}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, DEV_HOST, 8080);
+  connectStorageEmulator(storage, DEV_HOST, 9199);
 }
 
 export { app, auth, db, storage };

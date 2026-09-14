@@ -61,7 +61,7 @@ class AccountController {
     const isValid = TRANSACTION_TYPES.includes(type)
       && Number.isFinite(amount)
       && typeof accountId === 'string' && accountId !== ''
-      && [from, to, anexo, category].every(isOptionalString)
+      && [from, to, anexo, urlAnexo, category].every(isOptionalString)
     if (!isValid) {
       return res.status(400).json({ message: 'Transação inválida' })
     }

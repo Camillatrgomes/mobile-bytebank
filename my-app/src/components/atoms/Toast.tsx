@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors, BorderRadius, Spacing, FontSize } from '@/constants/theme';
 
 type ToastVariant = 'success' | 'error' | 'warning' | 'info';
@@ -14,7 +14,16 @@ interface ToastContextValue {
   toast: (message: string, variant?: ToastVariant) => void;
 }
 
+interface ToastListContextValue {
+  toasts: ToastMessage[];
+  registerModalHost: () => () => void;
+}
+
 const ToastContext = createContext<ToastContextValue | null>(null);
+const ToastListContext = createContext<ToastListContextValue>({
+  toasts: [],
+  registerModalHost: () => () => {},
+});
 
 const TOAST_DURATION = 3000;
 
@@ -34,8 +43,19 @@ function ToastItem({ message, variant }: { message: string; variant: ToastVarian
   );
 }
 
+function ToastList({ toasts }: { toasts: ToastMessage[] }) {
+  return (
+    <View style={styles.container}>
+      {toasts.map((t) => (
+        <ToastItem key={t.id} message={t.message} variant={t.variant} />
+      ))}
+    </View>
+  );
+}
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [modalHosts, setModalHosts] = useState(0);
 
   const toast = useCallback((message: string, variant: ToastVariant = 'info') => {
     const id = Math.random().toString(36).slice(2);
@@ -45,16 +65,26 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     }, TOAST_DURATION);
   }, []);
 
+  const registerModalHost = useCallback(() => {
+    setModalHosts((count) => count + 1);
+    return () => setModalHosts((count) => count - 1);
+  }, []);
+
   return (
     <ToastContext.Provider value={{ toast }}>
-      {children}
-      <View style={styles.container} pointerEvents="none">
-        {toasts.map((t) => (
-          <ToastItem key={t.id} message={t.message} variant={t.variant} />
-        ))}
-      </View>
+      <ToastListContext.Provider value={{ toasts, registerModalHost }}>
+        {children}
+        {modalHosts === 0 && <ToastList toasts={toasts} />}
+      </ToastListContext.Provider>
     </ToastContext.Provider>
   );
+}
+
+// Modal nativo fica acima de toda a árvore: com um aberto, os toasts são desenhados dentro dele.
+export function ModalToastHost() {
+  const { toasts, registerModalHost } = useContext(ToastListContext);
+  useEffect(registerModalHost, [registerModalHost]);
+  return <ToastList toasts={toasts} />;
 }
 
 export function useToast(): (message: string, variant?: ToastVariant) => void {
@@ -71,6 +101,7 @@ const styles = StyleSheet.create({
     right: Spacing.four,
     gap: Spacing.two,
     zIndex: 9999,
+    pointerEvents: 'none',
   },
   toast: {
     borderRadius: BorderRadius.md,

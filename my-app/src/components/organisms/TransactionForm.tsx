@@ -1,55 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Controller,
-  useForm,
-} from 'react-hook-form';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Modal } from '@/components/atoms/Modal';
 import { Button } from '@/components/atoms/Button';
 import { FloatInput } from '@/components/atoms/FloatInput';
-import { closeModal, setSubmitting } from '@/store/transactionFormSlice';
 import { apiFetch } from '@/lib/api';
 import { suggestCategory } from '@/lib/categoryHelpers';
 import { useToast } from '@/components/atoms/Toast';
 import { revalidateAccount } from '@/hooks/useAccount';
+import { useTransactions } from '@/contexts/TransactionsContext';
 import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
 import { uploadReceipt } from '@/lib/receipts';
-import type { DocumentPickerAsset } from 'expo-document-picker';
+import {
+  createTransactionSchema,
+  parseAmount,
+  sanitizeAmountInput,
+  type TransactionFormValues,
+} from '@/lib/transactionSchema';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
-import type { RootState, AppDispatch } from '@/store';
-
-const schema = z.object({
-  type: z.enum(['Credit', 'Debit']),
-  value: z.string().min(1, 'Informe o valor').refine((v) => !isNaN(parseFloat(v.replace(',', '.'))) && parseFloat(v.replace(',', '.')) > 0, 'Valor deve ser positivo'),
-  description: z.string().min(1, 'Informe uma descrição'),
-  category: z.string().min(1, 'Selecione uma categoria'),
-});
-
-type FormData = z.infer<typeof schema>;
+import type { DocumentPickerAsset } from 'expo-document-picker';
 
 interface TransactionFormProps {
   accountId: string | null;
 }
 
 export function TransactionForm({ accountId }: TransactionFormProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const isModalOpen = useSelector((s: RootState) => s.transactionForm.isModalOpen);
-  const isSubmitting = useSelector((s: RootState) => s.transactionForm.isSubmitting);
+  const { isFormOpen, closeForm, saldo } = useTransactions();
   const toast = useToast();
   const [receipt, setReceipt] = useState<DocumentPickerAsset | null>(null);
+  const schema = useMemo(() => createTransactionSchema({ availableBalance: saldo }), [saldo]);
 
   const {
     control,
@@ -58,8 +40,8 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
     setValue,
     getValues,
     reset,
-    formState: { errors },
-  } = useForm<FormData>({
+    formState: { errors, isSubmitting },
+  } = useForm<TransactionFormValues>({
     resolver: zodResolver(schema),
     defaultValues: { type: 'Debit', value: '', description: '', category: '' },
   });
@@ -87,22 +69,27 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
     }
   }, [type]);
 
-  async function onSubmit(data: FormData) {
+  function handleClose() {
+    reset();
+    setReceipt(null);
+    closeForm();
+  }
+
+  async function onSubmit(data: TransactionFormValues) {
     if (!accountId) {
       toast('Conta não encontrada', 'error');
       return;
     }
 
-    dispatch(setSubmitting(true));
     try {
-      const numericValue = parseFloat(data.value.replace(',', '.'));
+      const amount = parseAmount(data.value) ?? 0;
       const attachment = receipt ? await uploadReceipt(receipt) : {};
       await apiFetch('/account/transaction', {
         method: 'POST',
         body: {
           accountId,
           type: data.type,
-          value: data.type === 'Debit' ? -numericValue : numericValue,
+          value: data.type === 'Debit' ? -amount : amount,
           to: data.description,
           category: data.category,
           ...attachment,
@@ -111,24 +98,14 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
 
       await revalidateAccount();
       toast('Transação criada com sucesso!', 'success');
-      reset();
-      setReceipt(null);
-      dispatch(closeModal());
+      handleClose();
     } catch (err: any) {
       toast(err.message ?? 'Erro ao criar transação', 'error');
-    } finally {
-      dispatch(setSubmitting(false));
     }
   }
 
-  function handleClose() {
-    reset();
-    setReceipt(null);
-    dispatch(closeModal());
-  }
-
   return (
-    <Modal visible={isModalOpen} onClose={handleClose} title="Nova Transação">
+    <Modal visible={isFormOpen} onClose={handleClose} title="Nova Transação">
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Type toggle */}
         <View style={styles.typeToggle}>
@@ -169,7 +146,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
               <FloatInput
                 label="Valor (R$)"
                 value={field.value}
-                onChangeText={field.onChange}
+                onChangeText={(v) => field.onChange(sanitizeAmountInput(v))}
                 keyboardType="decimal-pad"
                 error={errors.value?.message}
               />
@@ -184,6 +161,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
                 label="Descrição / Destinatário"
                 value={field.value}
                 onChangeText={field.onChange}
+                maxLength={60}
                 error={errors.description?.message}
               />
             )}

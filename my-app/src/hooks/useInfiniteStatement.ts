@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 import {
@@ -16,25 +15,20 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { registerStatementRevalidator } from '@/lib/statementRevalidation';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useTransactionFilters, type TransactionFilters } from '@/contexts/TransactionsContext';
 import type { IApiTransaction } from './useAccount';
-import type { RootState } from '@/store';
 
 export const STATEMENT_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 const DAY_MS = 86_400_000;
 
-type StatementFilters = RootState['filter'];
+type StatementFilters = TransactionFilters;
 
 interface StatementPage {
   transactions: IApiTransaction[];
   cursor: QueryDocumentSnapshot | null;
-}
-
-const revalidators = new Set<() => void>();
-
-// O mutate global do SWR ignora chaves do useSWRInfinite; quem altera transações chama isto.
-export function revalidateStatement() {
-  revalidators.forEach((revalidate) => revalidate());
 }
 
 // Mesma normalização usada pelo backend ao gravar descriptionLower.
@@ -109,10 +103,10 @@ async function fetchCount([, uid, filters]: readonly ['statement-count', string,
 
 /** Extrato paginado por cursor direto do Firestore, com os filtros traduzidos para a query. */
 export function useInfiniteStatement(pageSize: number = STATEMENT_PAGE_SIZE) {
-  const uid = useSelector((s: RootState) => s.auth.user?.id ?? null);
-  const { month, type, category, search, startDate, endDate } = useSelector(
-    (s: RootState) => s.filter
-  );
+  const uid = useAuthContext().user?.id ?? null;
+  const {
+    filters: { month, type, category, search, startDate, endDate },
+  } = useTransactionFilters();
 
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   useEffect(() => {
@@ -153,12 +147,7 @@ export function useInfiniteStatement(pageSize: number = STATEMENT_PAGE_SIZE) {
 
   const mutate = useCallback(() => Promise.all([mutatePages(), mutateTotal()]), [mutatePages, mutateTotal]);
 
-  useEffect(() => {
-    revalidators.add(mutate);
-    return () => {
-      revalidators.delete(mutate);
-    };
-  }, [mutate]);
+  useEffect(() => registerStatementRevalidator(mutate), [mutate]);
 
   const transactions = useMemo(() => data?.flatMap((page) => page.transactions) ?? [], [data]);
   const hasMore = Boolean(data?.[data.length - 1]?.cursor);

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { setDateRange } from '@/store/filterSlice';
+import { useTransactionFilters } from '@/contexts/TransactionsContext';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { formatDateInput, maskDateInput, parseDateInput } from '@/lib/formatters';
 import { Spacing } from '@/constants/theme';
-import type { RootState, AppDispatch } from '@/store';
 
 const DATE_LENGTH = 10;
 
 export function DateRangeFilter() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { startDate, endDate } = useSelector((s: RootState) => s.filter);
+  const {
+    filters: { startDate, endDate },
+    setDateRange,
+  } = useTransactionFilters();
 
   const [start, setStart] = useState(() => formatDateInput(startDate));
   const [end, setEnd] = useState(() => formatDateInput(endDate));
@@ -45,7 +45,7 @@ export function DateRangeFilter() {
     const hasChanged = nextStartDate !== startDate || nextEndDate !== endDate;
 
     if (isComplete && isOrdered && hasChanged) {
-      dispatch(setDateRange({ startDate: nextStartDate, endDate: nextEndDate }));
+      setDateRange(nextStartDate, nextEndDate);
     }
   }
 
