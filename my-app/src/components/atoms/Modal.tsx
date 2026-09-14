@@ -115,7 +115,7 @@ function Sheet({ title, onClose, children }: Omit<ModalProps, 'visible'>) {
 
 const styles = StyleSheet.create({
   overlayWrapper: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   overlay: {
     flex: 1,
