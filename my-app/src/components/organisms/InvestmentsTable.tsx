@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Platform, View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 import type { ITransaction } from '../../hooks/useTransactionList';
+
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 const COLORS = {
   primary: '#6B8E23', // receita
@@ -37,6 +39,65 @@ function formatCurrency(value: number): string {
 
 interface Props {
   transactions: ITransaction[];
+}
+
+/** Animated chip that pulses when selected */
+function WeekChip({
+  label,
+  isActive,
+  onPress,
+}: {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  function handlePress() {
+    Animated.sequence([
+      Animated.timing(scale, { toValue: 0.92, duration: 80, useNativeDriver: USE_NATIVE_DRIVER }),
+      Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: USE_NATIVE_DRIVER }),
+    ]).start();
+    onPress();
+  }
+
+  return (
+    <Pressable onPress={handlePress}>
+      <Animated.View style={[styles.weekChip, isActive && styles.weekChipActive, { transform: [{ scale }] }]}>
+        <Text style={[styles.weekChipText, isActive && styles.weekChipTextActive]}>{label}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** Slide + fade animation when chart content changes */
+function AnimatedChartContainer({ children, weekKey }: { children: React.ReactNode; weekKey: string | null }) {
+  const opacity = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const prevKey = useRef(weekKey);
+
+  useEffect(() => {
+    if (prevKey.current === weekKey) return;
+    prevKey.current = weekKey;
+
+    // Slide out left, then slide in from right
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 0, duration: 120, useNativeDriver: USE_NATIVE_DRIVER }),
+        Animated.timing(translateX, { toValue: -20, duration: 120, useNativeDriver: USE_NATIVE_DRIVER }),
+      ]),
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: USE_NATIVE_DRIVER }),
+        Animated.spring(translateX, { toValue: 0, friction: 7, useNativeDriver: USE_NATIVE_DRIVER }),
+      ]),
+    ]).start();
+  }, [weekKey]);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateX }] }}>
+      {children}
+    </Animated.View>
+  );
 }
 
 export function InvestmentsTable({ transactions }: Props) {
@@ -120,15 +181,12 @@ export function InvestmentsTable({ transactions }: Props) {
           {availableWeeks.map((w) => {
             const isActive = w.key === activeWeekKey;
             return (
-              <Pressable
+              <WeekChip
                 key={w.key}
+                label={w.label}
+                isActive={isActive}
                 onPress={() => setSelectedWeekKey(w.key)}
-                style={[styles.weekChip, isActive && styles.weekChipActive]}
-              >
-                <Text style={[styles.weekChipText, isActive && styles.weekChipTextActive]}>
-                  {w.label}
-                </Text>
-              </Pressable>
+              />
             );
           })}
         </ScrollView>
@@ -141,36 +199,39 @@ export function InvestmentsTable({ transactions }: Props) {
         <LegendDot color={COLORS.secondary} label="Despesas" />
       </View>
 
-      {maxValue > 1 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <BarChart
-            data={chartData}
-            width={chartWidth}
-            barWidth={BAR_WIDTH}
-            barBorderRadius={4}
-            height={220}
-            maxValue={maxValue * 1.2}
-            noOfSections={4}
-            yAxisTextStyle={{ color: COLORS.textLight, fontSize: 11 }}
-            yAxisLabelPrefix="R$ "
-            xAxisColor={COLORS.grid}
-            yAxisColor={COLORS.grid}
-            rulesColor={COLORS.grid}
-            rulesType="dashed"
-            isAnimated
-            animationDuration={600}
-            renderTooltip={(item: { value: number }) => (
-              <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>R$ {formatCurrency(item.value)}</Text>
-              </View>
-            )}
-          />
-        </ScrollView>
-      ) : (
-        <View style={styles.emptyChart}>
-          <Text style={styles.emptyText}>Sem movimentações nessa semana</Text>
-        </View>
-      )}
+      <AnimatedChartContainer weekKey={activeWeekKey}>
+        {maxValue > 1 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <BarChart
+              key={activeWeekKey ?? 'empty'}
+              data={chartData}
+              width={chartWidth}
+              barWidth={BAR_WIDTH}
+              barBorderRadius={4}
+              height={220}
+              maxValue={maxValue * 1.2}
+              noOfSections={4}
+              yAxisTextStyle={{ color: COLORS.textLight, fontSize: 11 }}
+              yAxisLabelPrefix="R$ "
+              xAxisColor={COLORS.grid}
+              yAxisColor={COLORS.grid}
+              rulesColor={COLORS.grid}
+              rulesType="dashed"
+              isAnimated
+              animationDuration={600}
+              renderTooltip={(item: { value: number }) => (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>R$ {formatCurrency(item.value)}</Text>
+                </View>
+              )}
+            />
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyChart}>
+            <Text style={styles.emptyText}>Sem movimentações nessa semana</Text>
+          </View>
+        )}
+      </AnimatedChartContainer>
     </View>
   );
 }
@@ -187,16 +248,16 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.background,
-    borderRadius: 15,
+    borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
     elevation: 5,
   },
   header: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   title: {
     fontSize: 16,

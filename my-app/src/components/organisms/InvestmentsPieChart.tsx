@@ -1,7 +1,9 @@
-import React from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
+
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 interface InvestmentsPieChartProps {
   data: { name: string; value: number }[];
@@ -9,6 +11,37 @@ interface InvestmentsPieChartProps {
 
 const CHART_COLORS = Colors.chartColors;
 const screenWidth = Dimensions.get('window').width;
+
+/** Staggered slide-in + fade for each legend row */
+function AnimatedRow({ children, index }: { children: React.ReactNode; index: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(-24)).current;
+
+  useEffect(() => {
+    const delay = index * 55;
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 320,
+        delay,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+      Animated.spring(translateX, {
+        toValue: 0,
+        friction: 7,
+        tension: 80,
+        delay,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateX }] }}>
+      {children}
+    </Animated.View>
+  );
+}
 
 export function InvestmentsPieChart({ data }: InvestmentsPieChartProps) {
   const chartData = data.map((d, i) => ({
@@ -21,6 +54,26 @@ export function InvestmentsPieChart({ data }: InvestmentsPieChartProps) {
 
   const total = chartData.reduce((s, d) => s + d.population, 0);
 
+  const chartScale = useRef(new Animated.Value(0.75)).current;
+  const chartOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (data.length === 0) return;
+    Animated.parallel([
+      Animated.spring(chartScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 70,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+      Animated.timing(chartOpacity, {
+        toValue: 1,
+        duration: 380,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+    ]).start();
+  }, [data.length]);
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Distribuição por Categoria</Text>
@@ -32,7 +85,12 @@ export function InvestmentsPieChart({ data }: InvestmentsPieChartProps) {
         </View>
       ) : (
         <>
-          <View style={styles.chartWrapper}>
+          <Animated.View
+            style={[
+              styles.chartWrapper,
+              { opacity: chartOpacity, transform: [{ scale: chartScale }] },
+            ]}
+          >
             <PieChart
               data={chartData}
               width={screenWidth - Spacing.four * 2 - Spacing.six * 2}
@@ -49,17 +107,19 @@ export function InvestmentsPieChart({ data }: InvestmentsPieChartProps) {
               center={[screenWidth / 4 - Spacing.four - Spacing.six, 0]}
               hasLegend={false}
             />
-          </View>
+          </Animated.View>
 
           <View style={styles.breakdownList}>
-            {chartData.map((d) => (
-              <View key={d.name} style={styles.breakdownRow}>
-                <View style={[styles.dot, { backgroundColor: d.color }]} />
-                <Text style={styles.breakdownName} numberOfLines={1}>{d.name}</Text>
-                <Text style={styles.breakdownPct}>
-                  {total > 0 ? Math.round((d.population / total) * 100) : 0}%
-                </Text>
-              </View>
+            {chartData.map((d, i) => (
+              <AnimatedRow key={d.name} index={i}>
+                <View style={styles.breakdownRow}>
+                  <View style={[styles.dot, { backgroundColor: d.color }]} />
+                  <Text style={styles.breakdownName} numberOfLines={1}>{d.name}</Text>
+                  <Text style={styles.breakdownPct}>
+                    {total > 0 ? Math.round((d.population / total) * 100) : 0}%
+                  </Text>
+                </View>
+              </AnimatedRow>
             ))}
           </View>
         </>
@@ -71,12 +131,12 @@ export function InvestmentsPieChart({ data }: InvestmentsPieChartProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 15,
+    borderRadius: 16,
     padding: Spacing.six,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
     elevation: 5,
   },
   title: {
@@ -116,11 +176,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+    paddingVertical: 3,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     flexShrink: 0,
   },
   breakdownName: {
@@ -132,7 +193,8 @@ const styles = StyleSheet.create({
   breakdownPct: {
     fontSize: FontSize.xs,
     color: Colors.gray500,
-    width: 32,
+    width: 36,
     textAlign: 'right',
+    fontWeight: FontWeight.semibold,
   },
 });

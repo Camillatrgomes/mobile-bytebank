@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AnimatedTouchable } from '@/components/atoms/AnimatedTouchable';
 import { useTransactionFilters } from '@/contexts/TransactionsContext';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { getLastMonths } from '@/lib/formatters';
@@ -24,7 +25,6 @@ export function FilterBar() {
   } = useTransactionFilters();
   const isAllMonths = month === '' && !startDate && !endDate;
   const months = getLastMonths(6);
-  // "Outros" existe nas duas listas.
   const categories = [...new Set([...CREDIT_CATEGORIES, ...DEBIT_CATEGORIES])];
 
   return (
@@ -39,24 +39,28 @@ export function FilterBar() {
       {/* Month filter */}
       <Text style={styles.sectionLabel}>Mês</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-        <TouchableOpacity
+        <AnimatedTouchable
+          scaleTo={0.92}
+          activeOpacity={1}
           style={[styles.chip, isAllMonths && styles.chipActive]}
           onPress={() => setMonth('')}
         >
           <Text style={[styles.chipText, isAllMonths && styles.chipTextActive]}>
             Todos os meses
           </Text>
-        </TouchableOpacity>
+        </AnimatedTouchable>
         {months.map((m) => (
-          <TouchableOpacity
+          <AnimatedTouchable
             key={m.value}
+            scaleTo={0.92}
+            activeOpacity={1}
             style={[styles.chip, month === m.value && styles.chipActive]}
             onPress={() => setMonth(m.value)}
           >
             <Text style={[styles.chipText, month === m.value && styles.chipTextActive]}>
               {m.label}
             </Text>
-          </TouchableOpacity>
+          </AnimatedTouchable>
         ))}
       </ScrollView>
 
@@ -68,8 +72,10 @@ export function FilterBar() {
       <View style={styles.typeRow}>
         {([['all', 'Todos'], ['Credit', 'Entradas ↑'], ['Debit', 'Saídas ↓']] as const).map(
           ([val, label]) => (
-            <TouchableOpacity
+            <AnimatedTouchable
               key={val}
+              scaleTo={0.95}
+              activeOpacity={1}
               style={[
                 styles.typeBtn,
                 type === val && {
@@ -97,7 +103,7 @@ export function FilterBar() {
               >
                 {label}
               </Text>
-            </TouchableOpacity>
+            </AnimatedTouchable>
           )
         )}
       </View>
@@ -105,24 +111,28 @@ export function FilterBar() {
       {/* Category filter */}
       <Text style={styles.sectionLabel}>Categoria</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-        <TouchableOpacity
+        <AnimatedTouchable
+          scaleTo={0.92}
+          activeOpacity={1}
           style={[styles.chip, category === '' && styles.chipActive]}
           onPress={() => setCategory('')}
         >
           <Text style={[styles.chipText, category === '' && styles.chipTextActive]}>
             Todas
           </Text>
-        </TouchableOpacity>
+        </AnimatedTouchable>
         {categories.map((cat) => (
-          <TouchableOpacity
+          <AnimatedTouchable
             key={cat}
+            scaleTo={0.92}
+            activeOpacity={1}
             style={[styles.chip, category === cat && styles.chipActive]}
             onPress={() => setCategory(cat)}
           >
             <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
               {cat}
             </Text>
-          </TouchableOpacity>
+          </AnimatedTouchable>
         ))}
       </ScrollView>
 
@@ -133,6 +143,7 @@ export function FilterBar() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

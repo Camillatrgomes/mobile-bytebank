@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ExtratoItem } from '@/components/molecules/ExtratoItem';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
+import { Button } from '@/components/atoms/Button';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { Receipt, Plus } from 'lucide-react-native';
 import type { IApiTransaction } from '@/hooks/useAccount';
@@ -46,10 +47,15 @@ export function ExtratoEmptyState({
         Que tal registrar sua primeira receita ou despesa?
       </Text>
       {onNewTransaction && (
-        <TouchableOpacity style={extratoStyles.emptyBtn} onPress={onNewTransaction}>
-          <Plus size={14} color={Colors.white} />
-          <Text style={extratoStyles.emptyBtnText}>Nova transação</Text>
-        </TouchableOpacity>
+        <View style={{ marginTop: Spacing.two }}>
+          <Button
+            size="sm"
+            onPress={onNewTransaction}
+            leftIcon={<Plus size={16} color={Colors.white} />}
+          >
+            Nova transação
+          </Button>
+        </View>
       )}
     </View>
   );
@@ -106,12 +112,15 @@ export function ExtratoList({
           {showViewAll && (
             <>
               <View style={extratoStyles.divider} />
-              <TouchableOpacity
-                style={extratoStyles.viewAllBtn}
-                onPress={() => router.push('/(app)/transactions')}
-              >
-                <Text style={extratoStyles.viewAllText}>Ver todas as transações</Text>
-              </TouchableOpacity>
+              <View style={{ padding: Spacing.two }}>
+                <Button
+                  variant="ghost"
+                  fullWidth
+                  onPress={() => router.push('/(app)/transactions')}
+                >
+                  Ver todas as transações
+                </Button>
+              </View>
             </>
           )}
         </>
