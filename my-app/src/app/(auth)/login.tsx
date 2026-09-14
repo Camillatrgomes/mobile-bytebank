@@ -69,15 +69,15 @@ export default function LoginScreen() {
                       
                                 {/* Header panel */}
                                 <AuthSidePanel 
-                                  heading="Bem-vindo de volta" 
-                                  subtext="Entre na sua conta para gerenciar suas finanças" 
+                                  heading="Experimente mais liberdade no controle da sua vida financeira." 
+                                  subtext="Gerencie suas finanças de forma simples e segura." 
                                 />
                       </View>
 
 
           {/* Form card */}
           <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Entrar</Text>
+            <Text style={styles.formTitle}>Entrar na Conta</Text>
 
             <View style={styles.fields}>
               <Controller
@@ -124,9 +124,9 @@ export default function LoginScreen() {
             </Button>
 
             <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Não tem conta? </Text>
+              <Text style={styles.signupText}>Sem conta? </Text>
               <TouchableOpacity onPress={() => router.replace('/(auth)/register')}>
-                <Text style={styles.signupLink}>Criar conta</Text>
+                <Text style={styles.signupLink}>Criar agora</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -178,14 +178,14 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     padding: Spacing.six,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 8,
   },
   formTitle: {
     fontSize: FontSize['2xl'],
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.semibold,
     color: Colors.gray900,
     marginBottom: Spacing.five,
   },

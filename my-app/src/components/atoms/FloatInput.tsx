@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +16,14 @@ interface FloatInputProps extends TextInputProps {
   error?: string;
   isPassword?: boolean;
 }
+
+const webInputStyle = Platform.OS === 'web'
+  ? ({
+      outlineStyle: 'none',
+      outlineWidth: 0,
+      outlineColor: 'transparent',
+    } as any)
+  : undefined;
 
 export function FloatInput({ label, error, isPassword = false, style, ...props }: FloatInputProps) {
   const [focused, setFocused] = useState(false);
@@ -43,7 +52,7 @@ export function FloatInput({ label, error, isPassword = false, style, ...props }
           {label}
         </Text>
         <TextInput
-          style={[styles.input, style]}
+          style={[styles.input, style, webInputStyle]}
           secureTextEntry={isPassword && !showPassword}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -55,7 +64,7 @@ export function FloatInput({ label, error, isPassword = false, style, ...props }
      <TouchableOpacity
           style={styles.eyeButton}
           onPress={() => setShowPassword((v) => !v)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} 
         >
           {showPassword ? <EyeOff color={Colors.gray500} size={22} /> : <Eye color={Colors.gray500} size={22} />}
         </TouchableOpacity>
@@ -125,4 +134,5 @@ const styles = StyleSheet.create({
     color: Colors.expense,
     marginLeft: Spacing.one,
   },
+  
 });
