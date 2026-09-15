@@ -6,25 +6,113 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  setMonth,
-  setType,
-  setCategory,
-  setSearch,
-  resetFilters,
-} from '@/store/filterSlice';
+import { AnimatedTouchable } from '@/components/atoms/AnimatedTouchable';
+import { useTransactionFilters } from '@/contexts/TransactionsContext';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { getLastMonths } from '@/lib/formatters';
 import { FloatInput } from '@/components/atoms/FloatInput';
+import { DateRangeFilter } from '@/components/molecules/DateRangeFilter';
 import { DEBIT_CATEGORIES, CREDIT_CATEGORIES } from '@/constants/categories';
-import type { RootState, AppDispatch } from '@/store';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+
+interface SliderOption {
+  value: string;
+  label: string;
+}
+
+interface FilterSliderProps {
+  options: SliderOption[];
+  selectedValue: string;
+  onSelect: (value: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  canGoPrevious: boolean;
+  canGoNext: boolean;
+}
+
+function FilterSlider({
+  options,
+  selectedValue,
+  onSelect,
+  onPrevious,
+  onNext,
+  canGoPrevious,
+  canGoNext,
+}: FilterSliderProps) {
+  const selectedIndex = options.findIndex((option) => option.value === selectedValue);
+  const orderedOptions = selectedIndex > 0
+    ? [options[selectedIndex], ...options.slice(selectedIndex + 1), ...options.slice(0, selectedIndex)]
+    : options;
+
+  return (
+    <View style={styles.sliderRow}>
+      <TouchableOpacity
+        onPress={onPrevious}
+        disabled={!canGoPrevious}
+        style={[styles.arrowBtn, !canGoPrevious && styles.arrowBtnDisabled]}
+        accessibilityLabel="Opção anterior"
+      >
+        <ChevronLeft size={16} color={canGoPrevious ? Colors.primary600 : Colors.gray300} />
+      </TouchableOpacity>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+        style={styles.sliderScroll}
+      >
+        {orderedOptions.map((option) => {
+          const isActive = option.value === selectedValue;
+          return (
+            <AnimatedTouchable
+              key={option.value || 'all'}
+              scaleTo={0.92}
+              activeOpacity={1}
+              style={[styles.chip, isActive && styles.chipActive]}
+              onPress={() => onSelect(option.value)}
+            >
+              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                {option.label}
+              </Text>
+            </AnimatedTouchable>
+          );
+        })}
+      </ScrollView>
+
+      <TouchableOpacity
+        onPress={onNext}
+        disabled={!canGoNext}
+        style={[styles.arrowBtn, !canGoNext && styles.arrowBtnDisabled]}
+        accessibilityLabel="Próxima opção"
+      >
+        <ChevronRight size={16} color={canGoNext ? Colors.primary600 : Colors.gray300} />
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export function FilterBar() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { month, type, category, search } = useSelector((s: RootState) => s.filter);
+  const {
+    filters: { month, type, category, search, startDate, endDate },
+    setMonth,
+    setType,
+    setCategory,
+    setSearch,
+    resetFilters,
+  } = useTransactionFilters();
+  const isAllMonths = month === '' && !startDate && !endDate;
   const months = getLastMonths(6);
-  const categories = [...CREDIT_CATEGORIES, ...DEBIT_CATEGORIES];
+  const categories = [...new Set([...CREDIT_CATEGORIES, ...DEBIT_CATEGORIES])];
+  const monthOptions = [
+    { value: '', label: 'Todos os meses' },
+    ...months,
+  ];
+  const categoryOptions = [
+    { value: '', label: 'Todas' },
+    ...categories.map((value) => ({ value, label: value })),
+  ];
+  const monthIndex = months.findIndex((item) => item.value === month);
+  const categoryIndex = categories.findIndex((item) => item === category);
 
   return (
     <View style={styles.container}>
@@ -32,32 +120,33 @@ export function FilterBar() {
       <FloatInput
         label="Buscar transação..."
         value={search}
-        onChangeText={(v) => dispatch(setSearch(v))}
+        onChangeText={setSearch}
       />
 
       {/* Month filter */}
       <Text style={styles.sectionLabel}>Mês</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-        {months.map((m) => (
-          <TouchableOpacity
-            key={m.value}
-            style={[styles.chip, month === m.value && styles.chipActive]}
-            onPress={() => dispatch(setMonth(m.value))}
-          >
-            <Text style={[styles.chipText, month === m.value && styles.chipTextActive]}>
-              {m.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <FilterSlider
+        options={monthOptions}
+        selectedValue={isAllMonths ? '' : month || '__period__'}
+        onSelect={setMonth}
+        onPrevious={() => setMonth(monthIndex < 0 ? months[0].value : months[monthIndex - 1]?.value ?? month)}
+        onNext={() => monthIndex >= 0 && monthIndex < months.length - 1 && setMonth(months[monthIndex + 1].value)}
+        canGoPrevious={monthIndex < 0 || monthIndex > 0}
+        canGoNext={monthIndex >= 0 && monthIndex < months.length - 1}
+      />
+
+      <Text style={styles.sectionLabel}>Período (DD/MM/AAAA)</Text>
+      <DateRangeFilter />
 
       {/* Type filter */}
       <Text style={styles.sectionLabel}>Tipo</Text>
       <View style={styles.typeRow}>
         {([['all', 'Todos'], ['Credit', 'Entradas ↑'], ['Debit', 'Saídas ↓']] as const).map(
           ([val, label]) => (
-            <TouchableOpacity
+            <AnimatedTouchable
               key={val}
+              scaleTo={0.95}
+              activeOpacity={1}
               style={[
                 styles.typeBtn,
                 type === val && {
@@ -75,7 +164,7 @@ export function FilterBar() {
                       : Colors.primary600,
                 },
               ]}
-              onPress={() => dispatch(setType(val))}
+              onPress={() => setType(val)}
             >
               <Text
                 style={[
@@ -85,42 +174,31 @@ export function FilterBar() {
               >
                 {label}
               </Text>
-            </TouchableOpacity>
+            </AnimatedTouchable>
           )
         )}
       </View>
 
       {/* Category filter */}
       <Text style={styles.sectionLabel}>Categoria</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-        <TouchableOpacity
-          style={[styles.chip, category === '' && styles.chipActive]}
-          onPress={() => dispatch(setCategory(''))}
-        >
-          <Text style={[styles.chipText, category === '' && styles.chipTextActive]}>
-            Todas
-          </Text>
-        </TouchableOpacity>
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[styles.chip, category === cat && styles.chipActive]}
-            onPress={() => dispatch(setCategory(cat))}
-          >
-            <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <FilterSlider
+        options={categoryOptions}
+        selectedValue={category}
+        onSelect={setCategory}
+        onPrevious={() => categoryIndex >= 0 && categoryIndex < categories.length - 1 && setCategory(categories[categoryIndex + 1])}
+        onNext={() => setCategory(categoryIndex < 0 ? categories[0] : categories[categoryIndex - 1] ?? category)}
+        canGoPrevious={categoryIndex >= 0 && categoryIndex < categories.length - 1}
+        canGoNext={categoryIndex < 0 || categoryIndex > 0}
+      />
 
       {/* Reset */}
-      <TouchableOpacity onPress={() => dispatch(resetFilters())} style={styles.resetBtn}>
+      <TouchableOpacity onPress={resetFilters} style={styles.resetBtn}>
         <Text style={styles.resetText}>Limpar filtros</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -138,6 +216,28 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingVertical: 2,
   },
+  sliderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  sliderScroll: {
+    flex: 1,
+  },
+  arrowBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.primary100,
+    borderWidth: 1,
+    borderColor: Colors.primary600,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowBtnDisabled: {
+    backgroundColor: Colors.gray100,
+    borderColor: Colors.gray200,
+  },
   chip: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
@@ -153,6 +253,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: FontSize.sm,
     color: Colors.gray600,
+    marginHorizontal:Spacing.two,
   },
   chipTextActive: {
     color: Colors.primary700,
@@ -165,6 +266,7 @@ const styles = StyleSheet.create({
   typeBtn: {
     flex: 1,
     paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     backgroundColor: Colors.gray100,

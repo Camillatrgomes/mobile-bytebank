@@ -1,5 +1,6 @@
 import useSWR, { mutate as globalMutate } from 'swr';
 import { apiFetch } from '@/lib/api';
+import { revalidateStatement } from '@/lib/statementRevalidation';
 
 export interface IApiTransaction {
   id: string;
@@ -10,6 +11,8 @@ export interface IApiTransaction {
   to?: string;
   category?: string;
   date: string;
+  anexo?: string | null;
+  urlAnexo?: string | null;
 }
 
 export interface IAccountResponse {
@@ -60,5 +63,6 @@ export function useAccount() {
 }
 
 export function revalidateAccount() {
+  revalidateStatement();
   return globalMutate('/account');
 }

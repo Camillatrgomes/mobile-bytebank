@@ -1,9 +1,8 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSelector } from 'react-redux';
 import { router } from 'expo-router';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { User } from 'lucide-react-native';
-import type { RootState } from '@/store';
 
 interface HeaderProps {
   title?: string;
@@ -11,7 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, showLogout = false }: HeaderProps) {
-  const user = useSelector((s: RootState) => s.auth.user);
+  const { user } = useAuthContext();
 
   return (
     <View style={styles.header}>
@@ -31,20 +30,17 @@ export function Header({ title, showLogout = false }: HeaderProps) {
       {user && (
         <TouchableOpacity
           style={styles.userArea}
-         onPress={() => router.push('/profile')}
-
+          onPress={() => router.push('/profile')}
           activeOpacity={0.7}
         >
           <View style={styles.avatarCircle}>
-            <User size={16} color={Colors.white} />
+            <User size={14} color={Colors.white} />
           </View>
           <Text style={styles.userName} numberOfLines={1}>{user.username}</Text>
         </TouchableOpacity>
       )}
-
     </View>
   );
-  
 }
 
 const styles = StyleSheet.create({
@@ -55,7 +51,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.five,
     paddingVertical: Spacing.three,
     backgroundColor: Colors.primary600,
-    position: 'relative',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.primary700,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   brand: {
     flexDirection: 'row',
@@ -83,17 +85,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primary300,
+    backgroundColor: 'rgba(0,0,0,0.15)',
     paddingHorizontal: Spacing.three,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 20,
     maxWidth: 160,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   avatarCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary600,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Colors.primary700,
     alignItems: 'center',
     justifyContent: 'center',
   },

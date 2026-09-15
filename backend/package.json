@@ -5,28 +5,30 @@
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node src/index.js",
-    "dev": "cross-env NODE_ENV=development nodemon src/index.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand"
+    "dev": "cross-env NODE_ENV=development FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 nodemon src/index.js",
+    "dev:cloud": "cross-env NODE_ENV=development node --env-file=.env src/index.js",
+    "emulators": "cd .. && firebase emulators:start --import=.emulator-data --export-on-exit=.emulator-data",
+    "seed": "cross-env FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 node scripts/seed.js",
+    "seed:cloud": "node --env-file=.env scripts/seed.js",
+    "lint": "eslint .",
+    "test": "cross-env NODE_ENV=test FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 node --test --test-force-exit tests/*.test.js",
+    "test:emulators": "cd .. && firebase emulators:exec --only auth,firestore \"npm --prefix backend test\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.8.0",
-    "mongodb-memory-server": "^9.4.0",
-    "mongoose": "^8.5.0",
+    "firebase-admin": "^14.4.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "cross-env": "^7.0.3",
-    "jest": "^30.2.0",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
     "nodemon": "^3.1.7",
     "supertest": "^7.1.4"
-  },
-  "jest": {
-    "testEnvironment": "node"
   }
 }

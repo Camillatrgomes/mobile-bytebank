@@ -1,37 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
-import { useDispatch, useSelector } from 'react-redux';
 import { View, ActivityIndicator } from 'react-native';
-import { storage } from '@/lib/storage';
-import { setCredentials } from '@/store/authSlice';
-import type { AppDispatch, RootState } from '@/store';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/theme';
 
-/**
- * AuthGate: Restores session from SecureStore on startup,
- * then guards routes based on authentication state.
- */
 export function AuthGate() {
   const router = useRouter();
   const segments = useSegments();
-  const dispatch = useDispatch<AppDispatch>();
-  const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    async function restoreSession() {
-      try {
-        const token = await storage.getToken();
-        const user = await storage.getUser();
-        if (token && user) {
-          dispatch(setCredentials(user));
-        }
-      } finally {
-        setIsReady(true);
-      }
-    }
-    restoreSession();
-  }, [dispatch]);
+  const { isAuthenticated, isReady } = useAuthContext();
 
   useEffect(() => {
     if (!isReady) return;
@@ -46,7 +22,7 @@ export function AuthGate() {
       // @ts-ignore — Expo Router's typed routes don't support group paths as strings
       router.replace('/(app)/home');
     }
-  }, [isAuthenticated, segments, isReady]);
+  }, [isAuthenticated, segments, isReady, router]);
 
   if (!isReady) {
     return (

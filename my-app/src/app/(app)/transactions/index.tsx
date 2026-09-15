@@ -1,28 +1,33 @@
 import { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
-import { ExtratoList } from '@/components/organisms/ExtratoList';
+import { ExtratoListInfinite } from '@/components/organisms/ExtratoListInfinite';
 import { FilterBar } from '@/components/molecules/FilterBar';
 import { Modal } from '@/components/atoms/Modal';
-import { useStatement } from '@/hooks/useStatement';
+import { useInfiniteStatement } from '@/hooks/useInfiniteStatement';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { SlidersHorizontal } from 'lucide-react-native';
 
 export default function TransactionsScreen() {
-  const { transactions, isLoading, mutate } = useStatement();
+  const {
+    transactions,
+    total,
+    hasMore,
+    loadMore,
+    isLoadingMore,
+    isLoading,
+    mutate,
+  } = useInfiniteStatement();
   const [filterVisible, setFilterVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Header />
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => mutate()} />}
-      >
+      {/* Sem ScrollView: a FlatList do extrato é o único container rolável da
+          tela, o que preserva a virtualização da lista. */}
+      <View style={styles.content}>
         {/* Page title bar card matching MFE */}
         <View style={styles.titleCard}>
           <Text style={styles.title}>Extrato</Text>
@@ -37,15 +42,21 @@ export default function TransactionsScreen() {
 
         {/* Transaction count */}
         <Text style={styles.count}>
-          {transactions.length} transaç{transactions.length !== 1 ? 'ões' : 'ão'} encontrada{transactions.length !== 1 ? 's' : ''}
+          Mostrando {transactions.length} de {total} transaç
+          {total !== 1 ? 'ões' : 'ão'}
         </Text>
 
-        <ExtratoList
+        <ExtratoListInfinite
           transactions={transactions}
           isLoading={isLoading}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          onEndReached={loadMore}
+          onRefresh={() => mutate()}
+          refreshing={isLoading}
           emptyMessage="Nenhuma transação para os filtros selecionados"
         />
-      </ScrollView>
+      </View>
 
       {/* Filter bottom sheet */}
       <Modal
@@ -66,13 +77,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.secondary600,
   },
-  scroll: {
-    flex: 1,
-  },
   content: {
+    flex: 1,
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: 100,
+    paddingBottom: Spacing.four,
     gap: Spacing.three,
   },
   titleCard: {

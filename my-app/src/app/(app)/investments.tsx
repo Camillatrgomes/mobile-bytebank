@@ -1,27 +1,39 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
 import { InvestmentsKPICards } from '@/components/molecules/InvestmentsKPICards';
 import { InvestmentsPieChart } from '@/components/organisms/InvestmentsPieChart';
 import { InvestmentsTable } from '@/components/organisms/InvestmentsTable';
+import { FadeInView } from '@/components/atoms/FadeInView';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
 import { useTransactionList } from '@/hooks/useTransactionList';
 import { getLastMonths } from '@/lib/formatters';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
-import { PiggyBank } from 'lucide-react-native';
-
-const FULL_MONTHS = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-];
+import { PiggyBank, ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 export default function InvestmentsScreen() {
   const months = getLastMonths(6);
   const [selectedMonth, setSelectedMonth] = useState(months[0].value);
 
-  const { transactions, receitas, despesas, lucro, byCategory, isLoading } =
+  const { transactions, receitas, despesas, lucro, byCategory, isLoading, mutate } =
     useTransactionList(selectedMonth);
+
+  const selectedIndex = months.findIndex((m) => m.value === selectedMonth);
+  const orderedMonths = [
+    ...months.slice(selectedIndex),
+    ...months.slice(0, selectedIndex),
+  ];
+  const canGoPrev = selectedIndex > 0;
+  const canGoNext = selectedIndex < months.length - 1;
+
+  function goToPrevMonth() {
+    if (canGoPrev) setSelectedMonth(months[selectedIndex - 1].value);
+  }
+
+  function goToNextMonth() {
+    if (canGoNext) setSelectedMonth(months[selectedIndex + 1].value);
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -30,30 +42,68 @@ export default function InvestmentsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => {}} />}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => mutate()} />}
       >
-        {/* Header card like MFE */}
         <View style={styles.headerCard}>
           <Text style={styles.title}>Meus investimentos</Text>
+
           <View style={styles.monthFilterRow}>
             <Text style={styles.filterLabel}>Filtrar por mês</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.monthScroll}
-            >
-              {months.map((m) => (
-                <TouchableOpacity
-                  key={m.value}
-                  style={[styles.monthChip, selectedMonth === m.value && styles.monthChipActive]}
-                  onPress={() => setSelectedMonth(m.value)}
-                >
-                  <Text style={[styles.monthChipText, selectedMonth === m.value && styles.monthChipTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+
+
+            <View style={styles.monthNavRow}>
+
+
+              <TouchableOpacity
+                onPress={goToPrevMonth}
+                disabled={!canGoPrev}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                activeOpacity={0.65}
+              >
+                <View style={[styles.arrowBtn, !canGoPrev && styles.arrowBtnDisabled]}>
+                  <ChevronLeft
+                    size={16}
+                    color={canGoPrev ? Colors.primary600 : Colors.gray300}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              <ScrollView
+                horizontal
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.monthScroll}
+                style={styles.monthScrollView}
+              >
+                {orderedMonths.map((m) => (
+                  <TouchableOpacity
+                    key={m.value}
+                    style={[styles.monthChip, selectedMonth === m.value && styles.monthChipActive]}
+                    onPress={() => setSelectedMonth(m.value)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.monthChipText, selectedMonth === m.value && styles.monthChipTextActive]}>
+                      {m.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity
+                onPress={goToNextMonth}
+                disabled={!canGoNext}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                activeOpacity={0.65}
+              >
+                <View style={[styles.arrowBtn, !canGoNext && styles.arrowBtnDisabled]}>
+                  <ChevronRight
+                    size={16}
+                    color={canGoNext ? Colors.primary600 : Colors.gray300}
+                  />
+                </View>
+              </TouchableOpacity>
+
+            </View>
           </View>
         </View>
 
@@ -64,7 +114,6 @@ export default function InvestmentsScreen() {
             <SkeletonCard lines={4} />
           </>
         ) : transactions.length === 0 ? (
-          /* Empty state matching MFE */
           <View style={styles.emptyCard}>
             <View style={styles.emptyIconBg}>
               <PiggyBank size={28} color={Colors.primary600} />
@@ -75,16 +124,19 @@ export default function InvestmentsScreen() {
             </Text>
           </View>
         ) : (
-          <>
-            {/* KPI Cards */}
-            <InvestmentsKPICards receitas={receitas} despesas={despesas} lucro={lucro} />
+          <React.Fragment key={selectedMonth}>
+            <FadeInView delay={0}>
+              <InvestmentsKPICards receitas={receitas} despesas={despesas} lucro={lucro} />
+            </FadeInView>
 
-            {/* Pie Chart */}
-            <InvestmentsPieChart data={byCategory} />
+            <FadeInView delay={80}>
+              <InvestmentsPieChart data={byCategory} />
+            </FadeInView>
 
-            {/* Table */}
-            <InvestmentsTable transactions={transactions} />
-          </>
+            <FadeInView delay={160}>
+              <InvestmentsTable transactions={transactions} />
+            </FadeInView>
+          </React.Fragment>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -102,36 +154,67 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     gap: Spacing.four,
   },
+
   headerCard: {
     backgroundColor: Colors.white,
-    borderRadius: 15,
-    padding: Spacing.five,
+    borderRadius: 18,
+    paddingTop: Spacing.five,
+    paddingBottom: Spacing.four,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowRadius: 16,
+    elevation: 4,
     borderWidth: 1,
     borderColor: '#e8f0d5',
-    gap: Spacing.three,
   },
   title: {
     fontSize: FontSize['2xl'],
     fontWeight: FontWeight.bold,
     color: Colors.investmentDark,
+    letterSpacing: -0.3,
+    paddingHorizontal: Spacing.five,
+    marginBottom: Spacing.three,
   },
+
   monthFilterRow: {
-    gap: 8,
+    paddingHorizontal: Spacing.five,
+    gap: Spacing.two,
   },
   filterLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xs,
+    color: Colors.gray400,
+    fontWeight: FontWeight.semibold,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  monthNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  arrowBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.primary100,
+    borderWidth: 1,
+    borderColor: Colors.primary600,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowBtnDisabled: {
+    backgroundColor: Colors.gray100,
+    borderColor: Colors.gray200,
+  },
+  monthScrollView: {
+    flex: 1,
   },
   monthScroll: {
     flexDirection: 'row',
     gap: Spacing.two,
     paddingVertical: 2,
+    paddingHorizontal: Spacing.one,
   },
   monthChip: {
     paddingHorizontal: Spacing.three,
@@ -144,6 +227,11 @@ const styles = StyleSheet.create({
   monthChipActive: {
     backgroundColor: Colors.primary100,
     borderColor: Colors.primary600,
+    shadowColor: Colors.primary600,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   monthChipText: {
     fontSize: FontSize.sm,
@@ -153,6 +241,7 @@ const styles = StyleSheet.create({
     color: Colors.primary700,
     fontWeight: FontWeight.semibold,
   },
+
   emptyCard: {
     backgroundColor: Colors.white,
     borderRadius: 15,

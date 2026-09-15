@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAccount, revalidateAccount } from '@/hooks/useAccount';
+import { revalidateAccount } from '@/hooks/useAccount';
+import { useTransactions } from '@/contexts/TransactionsContext';
 import { TransactionEditForm } from '@/components/organisms/TransactionEditForm';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
@@ -24,7 +26,7 @@ export default function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
-  const { transactions, isLoading } = useAccount();
+  const { transactions, isLoading } = useTransactions();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -75,6 +77,8 @@ export default function TransactionDetailScreen() {
 
   const isCredit = transaction.type === 'Credit';
   const description = transaction.to ?? transaction.from ?? transaction.category ?? 'Transação';
+  // Só abre links http(s): urlAnexo chega do backend como texto livre.
+  const receiptUrl = /^https?:\/\//.test(transaction.urlAnexo ?? '') ? transaction.urlAnexo : null;
 
   if (isEditing) {
     return (
@@ -122,7 +126,7 @@ export default function TransactionDetailScreen() {
 
         {/* Amount */}
         <Text style={[styles.amount, { color: isCredit ? Colors.income : Colors.expense }]}>
-          {isCredit ? '+' : '-'} {formatCurrency(transaction.value)}
+          {isCredit ? '+' : '-'} {formatCurrency(Math.abs(transaction.value))}
         </Text>
 
         <Text style={styles.description}>{description}</Text>
@@ -142,6 +146,16 @@ export default function TransactionDetailScreen() {
           )}
           {transaction.from && <DetailRow label="De" value={transaction.from} />}
           {transaction.to && <DetailRow label="Para" value={transaction.to} />}
+          {receiptUrl && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Recibo</Text>
+              <TouchableOpacity onPress={() => Linking.openURL(receiptUrl)} style={styles.receiptLink}>
+                <Text style={styles.receiptLinkText} numberOfLines={1}>
+                  {transaction.anexo ?? 'Abrir recibo'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Actions */}
@@ -286,6 +300,15 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.gray800,
     fontWeight: FontWeight.semibold,
+  },
+  receiptLink: {
+    maxWidth: '60%',
+  },
+  receiptLinkText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary600,
+    fontWeight: FontWeight.semibold,
+    textDecorationLine: 'underline',
   },
   actions: {
     width: '100%',

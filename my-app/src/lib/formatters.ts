@@ -72,6 +72,35 @@ export function getLastMonths(count = 6): { value: string; label: string }[] {
 }
 
 /**
+ * Apply the DD/MM/AAAA mask while the user types
+ */
+export function maskDateInput(text: string): string {
+  const digits = text.replace(/\D/g, '').slice(0, 8);
+  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join('/');
+}
+
+/**
+ * Convert DD/MM/AAAA to YYYY-MM-DD, or null when the date does not exist
+ */
+export function parseDateInput(text: string): string | null {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+  if (!match) return null;
+  const [, day, month, year] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  if (date.getUTCDate() !== Number(day) || date.getUTCMonth() !== Number(month) - 1) return null;
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Convert YYYY-MM-DD to DD/MM/AAAA
+ */
+export function formatDateInput(isoDate: string | null): string {
+  if (!isoDate) return '';
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+/**
  * Check if a date string belongs to a given month (YYYY-MM format)
  */
 export function isInMonth(dateStr: string, month: string): boolean {

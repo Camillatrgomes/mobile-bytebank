@@ -1,38 +1,27 @@
-import React, { useEffect } from 'react';
-import {
-  Controller,
-  useForm,
-} from 'react-hook-form';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Button } from '@/components/atoms/Button';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/components/atoms/Toast';
 import { revalidateAccount } from '@/hooks/useAccount';
+import { useTransactions } from '@/contexts/TransactionsContext';
+import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
+import { uploadReceipt } from '@/lib/receipts';
+import {
+  createTransactionSchema,
+  formatAmountInput,
+  parseAmount,
+  sanitizeAmountInput,
+  type TransactionFormValues,
+} from '@/lib/transactionSchema';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
+import type { DocumentPickerAsset } from 'expo-document-picker';
 import type { IApiTransaction } from '@/hooks/useAccount';
-
-const schema = z.object({
-  type: z.enum(['Credit', 'Debit']),
-  value: z.string().min(1, 'Informe o valor').refine(
-    (v) => !isNaN(parseFloat(v.replace(',', '.'))) && parseFloat(v.replace(',', '.')) > 0,
-    'Valor deve ser positivo'
-  ),
-  description: z.string().min(1, 'Informe uma descrição'),
-  category: z.string().min(1, 'Selecione uma categoria'),
-});
-
-type FormData = z.infer<typeof schema>;
 
 interface TransactionEditFormProps {
   transaction: IApiTransaction;
@@ -42,18 +31,26 @@ interface TransactionEditFormProps {
 
 export function TransactionEditForm({ transaction, onSuccess, onCancel }: TransactionEditFormProps) {
   const toast = useToast();
+  const { saldo } = useTransactions();
+  const [receipt, setReceipt] = useState<DocumentPickerAsset | null>(null);
+  // O valor original volta ao saldo: editar não pode ser barrado pelo próprio lançamento.
+  const schema = useMemo(
+    () => createTransactionSchema({ availableBalance: saldo - transaction.value }),
+    [saldo, transaction.value]
+  );
 
   const {
     control,
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  } = useForm<TransactionFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       type: transaction.type,
-      value: String(Math.abs(transaction.value)),
+      value: formatAmountInput(transaction.value),
       description: transaction.to ?? transaction.from ?? '',
       category: transaction.category ?? '',
     },
@@ -62,20 +59,27 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
   const type = watch('type');
   const categories = type === 'Credit' ? CREDIT_CATEGORIES : DEBIT_CATEGORIES;
 
+  // Limpa a categoria apenas quando ela não existe na lista do tipo selecionado.
+  // Limpar incondicionalmente apagava a categoria pré-carregada na montagem.
   useEffect(() => {
-    setValue('category', '');
+    const current = getValues('category');
+    if (current && !categories.includes(current as never)) {
+      setValue('category', '');
+    }
   }, [type]);
 
-  async function onSubmit(data: FormData) {
+  async function onSubmit(data: TransactionFormValues) {
     try {
-      const numericValue = parseFloat(data.value.replace(',', '.'));
+      const amount = parseAmount(data.value) ?? 0;
+      const attachment = receipt ? await uploadReceipt(receipt) : {};
       await apiFetch(`/account/transaction/${transaction.id}`, {
         method: 'PUT',
         body: {
           type: data.type,
-          value: data.type === 'Debit' ? -numericValue : numericValue,
+          value: data.type === 'Debit' ? -amount : amount,
           to: data.description,
           category: data.category,
+          ...attachment,
         },
       });
 
@@ -136,7 +140,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
             <FloatInput
               label="Valor (R$)"
               value={field.value}
-              onChangeText={field.onChange}
+              onChangeText={(v) => field.onChange(sanitizeAmountInput(v))}
               keyboardType="decimal-pad"
               error={errors.value?.message}
             />
@@ -151,6 +155,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
               label="Descrição / Destinatário"
               value={field.value}
               onChangeText={field.onChange}
+              maxLength={60}
               error={errors.description?.message}
             />
           )}
@@ -187,6 +192,8 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
             <Text style={styles.errorText}>{errors.category.message}</Text>
           )}
         </View>
+
+        <ReceiptPicker asset={receipt} onChange={setReceipt} currentName={transaction.anexo} />
       </View>
 
       <View style={styles.actions}>

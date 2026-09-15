@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Platform, View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import type { ITransaction } from '../../hooks/useTransactionList';
+
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 const COLORS = {
   primary: '#6B8E23', // receita
@@ -39,6 +42,65 @@ interface Props {
   transactions: ITransaction[];
 }
 
+/** Animated chip that pulses when selected */
+function WeekChip({
+  label,
+  isActive,
+  onPress,
+}: {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  function handlePress() {
+    Animated.sequence([
+      Animated.timing(scale, { toValue: 0.92, duration: 80, useNativeDriver: USE_NATIVE_DRIVER }),
+      Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: USE_NATIVE_DRIVER }),
+    ]).start();
+    onPress();
+  }
+
+  return (
+    <Pressable onPress={handlePress}>
+      <Animated.View style={[styles.weekChip, isActive && styles.weekChipActive, { transform: [{ scale }] }]}>
+        <Text style={[styles.weekChipText, isActive && styles.weekChipTextActive]}>{label}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** Slide + fade animation when chart content changes */
+function AnimatedChartContainer({ children, weekKey }: { children: React.ReactNode; weekKey: string | null }) {
+  const opacity = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const prevKey = useRef(weekKey);
+
+  useEffect(() => {
+    if (prevKey.current === weekKey) return;
+    prevKey.current = weekKey;
+
+    // Slide out left, then slide in from right
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 0, duration: 120, useNativeDriver: USE_NATIVE_DRIVER }),
+        Animated.timing(translateX, { toValue: -20, duration: 120, useNativeDriver: USE_NATIVE_DRIVER }),
+      ]),
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: USE_NATIVE_DRIVER }),
+        Animated.spring(translateX, { toValue: 0, friction: 7, useNativeDriver: USE_NATIVE_DRIVER }),
+      ]),
+    ]).start();
+  }, [weekKey]);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateX }] }}>
+      {children}
+    </Animated.View>
+  );
+}
+
 export function InvestmentsTable({ transactions }: Props) {
   const { width: screenWidth } = useWindowDimensions();
 
@@ -56,6 +118,20 @@ export function InvestmentsTable({ transactions }: Props) {
 
   const [selectedWeekKey, setSelectedWeekKey] = useState<string | null>(null);
   const activeWeekKey = selectedWeekKey ?? availableWeeks.at(-1)?.key ?? null;
+  const activeWeekIndex = availableWeeks.findIndex((week) => week.key === activeWeekKey);
+  const orderedWeeks = activeWeekIndex > 0
+    ? [availableWeeks[activeWeekIndex], ...availableWeeks.slice(activeWeekIndex + 1), ...availableWeeks.slice(0, activeWeekIndex)]
+    : availableWeeks;
+  const canGoPreviousWeek = activeWeekIndex >= 0 && activeWeekIndex < availableWeeks.length - 1;
+  const canGoNextWeek = activeWeekIndex > 0;
+
+  function goToPreviousWeek() {
+    if (canGoPreviousWeek) setSelectedWeekKey(availableWeeks[activeWeekIndex + 1].key);
+  }
+
+  function goToNextWeek() {
+    if (canGoNextWeek) setSelectedWeekKey(availableWeeks[activeWeekIndex - 1].key);
+  }
 
   const rawData = useMemo(() => {
     const dataMap = daysLabel.map((day) => ({ name: day, receita: 0, despesa: 0 }));
@@ -111,27 +187,41 @@ export function InvestmentsTable({ transactions }: Props) {
       </View>
 
       {availableWeeks.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.weekSelector}
-          contentContainerStyle={styles.weekSelectorContent}
-        >
-          {availableWeeks.map((w) => {
-            const isActive = w.key === activeWeekKey;
-            return (
-              <Pressable
+        <View style={styles.weekSlider}>
+          <Pressable
+            onPress={goToPreviousWeek}
+            disabled={!canGoPreviousWeek}
+            style={[styles.arrowBtn, !canGoPreviousWeek && styles.arrowBtnDisabled]}
+            accessibilityLabel="Semana mais antiga"
+          >
+            <ChevronLeft size={16} color={canGoPreviousWeek ? COLORS.primary : '#D1D5DB'} />
+          </Pressable>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.weekSelector}
+            contentContainerStyle={styles.weekSelectorContent}
+          >
+            {orderedWeeks.map((w) => (
+              <WeekChip
                 key={w.key}
+                label={w.label}
+                isActive={w.key === activeWeekKey}
                 onPress={() => setSelectedWeekKey(w.key)}
-                style={[styles.weekChip, isActive && styles.weekChipActive]}
-              >
-                <Text style={[styles.weekChipText, isActive && styles.weekChipTextActive]}>
-                  {w.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+              />
+            ))}
+          </ScrollView>
+
+          <Pressable
+            onPress={goToNextWeek}
+            disabled={!canGoNextWeek}
+            style={[styles.arrowBtn, !canGoNextWeek && styles.arrowBtnDisabled]}
+            accessibilityLabel="Semana mais recente"
+          >
+            <ChevronRight size={16} color={canGoNextWeek ? COLORS.primary : '#D1D5DB'} />
+          </Pressable>
+        </View>
       ) : (
         <Text style={styles.emptyText}>Nenhuma transação no mês</Text>
       )}
@@ -141,36 +231,39 @@ export function InvestmentsTable({ transactions }: Props) {
         <LegendDot color={COLORS.secondary} label="Despesas" />
       </View>
 
-      {maxValue > 1 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <BarChart
-            data={chartData}
-            width={chartWidth}
-            barWidth={BAR_WIDTH}
-            barBorderRadius={4}
-            height={220}
-            maxValue={maxValue * 1.2}
-            noOfSections={4}
-            yAxisTextStyle={{ color: COLORS.textLight, fontSize: 11 }}
-            yAxisLabelPrefix="R$ "
-            xAxisColor={COLORS.grid}
-            yAxisColor={COLORS.grid}
-            rulesColor={COLORS.grid}
-            rulesType="dashed"
-            isAnimated
-            animationDuration={600}
-            renderTooltip={(item: { value: number }) => (
-              <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>R$ {formatCurrency(item.value)}</Text>
-              </View>
-            )}
-          />
-        </ScrollView>
-      ) : (
-        <View style={styles.emptyChart}>
-          <Text style={styles.emptyText}>Sem movimentações nessa semana</Text>
-        </View>
-      )}
+      <AnimatedChartContainer weekKey={activeWeekKey}>
+        {maxValue > 1 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <BarChart
+              key={activeWeekKey ?? 'empty'}
+              data={chartData}
+              width={chartWidth}
+              barWidth={BAR_WIDTH}
+              barBorderRadius={4}
+              height={220}
+              maxValue={maxValue * 1.2}
+              noOfSections={4}
+              yAxisTextStyle={{ color: COLORS.textLight, fontSize: 11 }}
+              yAxisLabelPrefix="R$ "
+              xAxisColor={COLORS.grid}
+              yAxisColor={COLORS.grid}
+              rulesColor={COLORS.grid}
+              rulesType="dashed"
+              isAnimated
+              animationDuration={600}
+              renderTooltip={(item: { value: number }) => (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>R$ {formatCurrency(item.value)}</Text>
+                </View>
+              )}
+            />
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyChart}>
+            <Text style={styles.emptyText}>Sem movimentações nessa semana</Text>
+          </View>
+        )}
+      </AnimatedChartContainer>
     </View>
   );
 }
@@ -187,16 +280,16 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.background,
-    borderRadius: 15,
+    borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
     elevation: 5,
   },
   header: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   title: {
     fontSize: 16,
@@ -204,11 +297,32 @@ const styles = StyleSheet.create({
     color: '#4d6418',
   },
   weekSelector: {
-    marginBottom: 12,
+    flex: 1,
   },
   weekSelectorContent: {
     gap: 8,
-    paddingRight: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  weekSlider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 12,
+  },
+  arrowBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#DDE9BD',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowBtnDisabled: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
   },
   weekChip: {
     paddingHorizontal: 12,

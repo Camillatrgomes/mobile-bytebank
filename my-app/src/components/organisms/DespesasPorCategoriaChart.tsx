@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { formatCurrency } from '@/lib/formatters';
 import type { IApiTransaction } from '@/hooks/useAccount';
-import { AlignCenter } from 'lucide-react-native';
+
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 interface DespesasPorCategoriaChartProps {
   transactions: IApiTransaction[];
@@ -13,6 +14,41 @@ interface DespesasPorCategoriaChartProps {
 
 const CHART_COLORS = Colors.chartColors;
 const screenWidth = Dimensions.get('window').width;
+
+function AnimatedRow({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    const delay = index * 60;
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        delay,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 300,
+        delay,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateX }] }}>
+      {children}
+    </Animated.View>
+  );
+}
 
 export function DespesasPorCategoriaChart({ transactions, isLoading }: DespesasPorCategoriaChartProps) {
   const { data, total } = useMemo(() => {
@@ -34,6 +70,26 @@ export function DespesasPorCategoriaChart({ transactions, isLoading }: DespesasP
     return { data: entries, total };
   }, [transactions]);
 
+  const chartScale = useRef(new Animated.Value(0.8)).current;
+  const chartOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (data.length === 0) return;
+    Animated.parallel([
+      Animated.spring(chartScale, {
+        toValue: 1,
+        friction: 6,
+        tension: 80,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+      Animated.timing(chartOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+    ]).start();
+  }, [data.length]);
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Despesas por categoria</Text>
@@ -49,36 +105,43 @@ export function DespesasPorCategoriaChart({ transactions, isLoading }: DespesasP
         </View>
       ) : (
         <>
-<View style={styles.chartWrapper}>
-  <PieChart
-    data={data}
-    width={screenWidth - Spacing.five * 2 - Spacing.six * 2}
-    height={200}
-    chartConfig={{
-      color: () => Colors.primary600,
-      labelColor: () => Colors.gray700,
-      backgroundGradientFrom: '#fff',
-      backgroundGradientTo: '#fff',
-    }}
-    accessor="population"
-    backgroundColor="transparent"
-    paddingLeft="0"
-    center={[screenWidth / 4 - Spacing.five - Spacing.six, 0]}
-    absolute={false}
-    hasLegend={false}
-  />
-</View>
+          <Animated.View
+            style={[
+              styles.chartWrapper,
+              { opacity: chartOpacity, transform: [{ scale: chartScale }] },
+            ]}
+          >
+            <PieChart
+              data={data}
+              width={screenWidth - Spacing.five * 2 - Spacing.six * 2}
+              height={200}
+              chartConfig={{
+                color: () => Colors.primary600,
+                labelColor: () => Colors.gray700,
+                backgroundGradientFrom: '#fff',
+                backgroundGradientTo: '#fff',
+              }}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="0"
+              center={[screenWidth / 4 - Spacing.five - Spacing.six, 0]}
+              absolute={false}
+              hasLegend={false}
+            />
+          </Animated.View>
 
-<View style={styles.breakdownList}>
+          <View style={styles.breakdownList}>
             {data.map((d, i) => (
-              <View key={d.name} style={styles.breakdownRow}>
-                <View style={[styles.dot, { backgroundColor: d.color }]} />
-                <Text style={styles.breakdownName} numberOfLines={1}>{d.name}</Text>
-                <Text style={styles.breakdownPct}>
-                  {total > 0 ? Math.round((d.population / total) * 100) : 0}%
-                </Text>
-                <Text style={styles.breakdownValue}>{formatCurrency(d.population)}</Text>
-              </View>
+              <AnimatedRow key={d.name} index={i}>
+                <View style={styles.breakdownRow}>
+                  <View style={[styles.dot, { backgroundColor: d.color }]} />
+                  <Text style={styles.breakdownName} numberOfLines={1}>{d.name}</Text>
+                  <Text style={styles.breakdownPct}>
+                    {total > 0 ? Math.round((d.population / total) * 100) : 0}%
+                  </Text>
+                  <Text style={styles.breakdownValue}>{formatCurrency(d.population)}</Text>
+                </View>
+              </AnimatedRow>
             ))}
           </View>
         </>
@@ -90,12 +153,12 @@ export function DespesasPorCategoriaChart({ transactions, isLoading }: DespesasP
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 15,
+    borderRadius: 16,
     padding: Spacing.six,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
     elevation: 5,
   },
   chartWrapper: {
@@ -142,11 +205,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+    paddingVertical: 3,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     flexShrink: 0,
   },
   breakdownName: {

@@ -10,23 +10,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
-import { apiFetch } from '@/lib/api';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme';
+import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { User, Mail, Pen, LogOut, ChevronRight, ShieldCheck } from 'lucide-react-native';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { Button } from '@/components/atoms/Button';
 import { Modal } from '@/components/atoms/Modal';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '@/store/authSlice';
-import type { AppDispatch } from '@/store';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
-  const dispatch = useDispatch<AppDispatch>();
+  const { user, logout, updateUsername } = useAuth();
 
   const [editing, setEditing] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username ?? '');
-  const [newEmail, setNewEmail] = useState(user?.email ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,17 +36,19 @@ export default function ProfileScreen() {
   }
 
   async function handleSave() {
+    const username = newUsername.trim();
+    if (!user) return;
+    if (!username) {
+      setError('Informe um nome.');
+      return;
+    }
     setError(null);
     setSaving(true);
     try {
-      await apiFetch(`/user/${user?.id}`, {
-        method: 'PUT',
-        body: { username: newUsername, email: newEmail },
-      });
-      dispatch(setCredentials({ id: user!.id, username: newUsername, email: newEmail }));
+      await updateUsername(username);
       setEditing(false);
-    } catch (err: any) {
-      setError(err.message ?? 'Não foi possível atualizar o perfil.');
+    } catch {
+      setError('Não foi possível atualizar o perfil.');
     } finally {
       setSaving(false);
     }
@@ -60,7 +56,6 @@ export default function ProfileScreen() {
 
   function handleCancel() {
     setNewUsername(user?.username ?? '');
-    setNewEmail(user?.email ?? '');
     setError(null);
     setEditing(false);
   }
@@ -108,13 +103,6 @@ export default function ProfileScreen() {
                   label="Nome de usuário"
                   value={newUsername}
                   onChangeText={setNewUsername}
-                  autoCapitalize="none"
-                />
-                <FloatInput
-                  label="E-mail"
-                  value={newEmail}
-                  onChangeText={setNewEmail}
-                  keyboardType="email-address"
                   autoCapitalize="none"
                 />
                 {error && <Text style={styles.errorText}>{error}</Text>}
