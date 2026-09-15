@@ -242,6 +242,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     color: Colors.gray500,
+    paddingHorizontal:  8,
   },
   typeBtnTextActive: {
     color: Colors.gray800,

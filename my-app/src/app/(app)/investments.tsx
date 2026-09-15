@@ -19,17 +19,20 @@ export default function InvestmentsScreen() {
   const { transactions, receitas, despesas, lucro, byCategory, isLoading, mutate } =
     useTransactionList(selectedMonth);
 
-
-    const selectedIndex = months.findIndex((m) => m.value === selectedMonth);
-  const canGoPrev = selectedIndex < months.length - 1; 
-  const canGoNext = selectedIndex > 0;                
+  const selectedIndex = months.findIndex((m) => m.value === selectedMonth);
+  const orderedMonths = [
+    ...months.slice(selectedIndex),
+    ...months.slice(0, selectedIndex),
+  ];
+  const canGoPrev = selectedIndex > 0;
+  const canGoNext = selectedIndex < months.length - 1;
 
   function goToPrevMonth() {
-    if (canGoPrev) setSelectedMonth(months[selectedIndex + 1].value);
+    if (canGoPrev) setSelectedMonth(months[selectedIndex - 1].value);
   }
 
   function goToNextMonth() {
-    if (canGoNext) setSelectedMonth(months[selectedIndex - 1].value);
+    if (canGoNext) setSelectedMonth(months[selectedIndex + 1].value);
   }
 
   return (
@@ -72,7 +75,7 @@ export default function InvestmentsScreen() {
                 contentContainerStyle={styles.monthScroll}
                 style={styles.monthScrollView}
               >
-                {months.map((m) => (
+                {orderedMonths.map((m) => (
                   <TouchableOpacity
                     key={m.value}
                     style={[styles.monthChip, selectedMonth === m.value && styles.monthChipActive]}

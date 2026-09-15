@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    paddingLeft: 40, 
+    paddingLeft: 5, 
   },
   divider: {
     width: 1,

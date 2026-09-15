@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Platform, View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import type { ITransaction } from '../../hooks/useTransactionList';
 
 const USE_NATIVE_DRIVER = Platform.OS !== 'web';
@@ -117,6 +118,20 @@ export function InvestmentsTable({ transactions }: Props) {
 
   const [selectedWeekKey, setSelectedWeekKey] = useState<string | null>(null);
   const activeWeekKey = selectedWeekKey ?? availableWeeks.at(-1)?.key ?? null;
+  const activeWeekIndex = availableWeeks.findIndex((week) => week.key === activeWeekKey);
+  const orderedWeeks = activeWeekIndex > 0
+    ? [availableWeeks[activeWeekIndex], ...availableWeeks.slice(activeWeekIndex + 1), ...availableWeeks.slice(0, activeWeekIndex)]
+    : availableWeeks;
+  const canGoPreviousWeek = activeWeekIndex >= 0 && activeWeekIndex < availableWeeks.length - 1;
+  const canGoNextWeek = activeWeekIndex > 0;
+
+  function goToPreviousWeek() {
+    if (canGoPreviousWeek) setSelectedWeekKey(availableWeeks[activeWeekIndex + 1].key);
+  }
+
+  function goToNextWeek() {
+    if (canGoNextWeek) setSelectedWeekKey(availableWeeks[activeWeekIndex - 1].key);
+  }
 
   const rawData = useMemo(() => {
     const dataMap = daysLabel.map((day) => ({ name: day, receita: 0, despesa: 0 }));
@@ -172,24 +187,41 @@ export function InvestmentsTable({ transactions }: Props) {
       </View>
 
       {availableWeeks.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.weekSelector}
-          contentContainerStyle={styles.weekSelectorContent}
-        >
-          {availableWeeks.map((w) => {
-            const isActive = w.key === activeWeekKey;
-            return (
+        <View style={styles.weekSlider}>
+          <Pressable
+            onPress={goToPreviousWeek}
+            disabled={!canGoPreviousWeek}
+            style={[styles.arrowBtn, !canGoPreviousWeek && styles.arrowBtnDisabled]}
+            accessibilityLabel="Semana mais antiga"
+          >
+            <ChevronLeft size={16} color={canGoPreviousWeek ? COLORS.primary : '#D1D5DB'} />
+          </Pressable>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.weekSelector}
+            contentContainerStyle={styles.weekSelectorContent}
+          >
+            {orderedWeeks.map((w) => (
               <WeekChip
                 key={w.key}
                 label={w.label}
-                isActive={isActive}
+                isActive={w.key === activeWeekKey}
                 onPress={() => setSelectedWeekKey(w.key)}
               />
-            );
-          })}
-        </ScrollView>
+            ))}
+          </ScrollView>
+
+          <Pressable
+            onPress={goToNextWeek}
+            disabled={!canGoNextWeek}
+            style={[styles.arrowBtn, !canGoNextWeek && styles.arrowBtnDisabled]}
+            accessibilityLabel="Semana mais recente"
+          >
+            <ChevronRight size={16} color={canGoNextWeek ? COLORS.primary : '#D1D5DB'} />
+          </Pressable>
+        </View>
       ) : (
         <Text style={styles.emptyText}>Nenhuma transação no mês</Text>
       )}
@@ -265,11 +297,32 @@ const styles = StyleSheet.create({
     color: '#4d6418',
   },
   weekSelector: {
-    marginBottom: 12,
+    flex: 1,
   },
   weekSelectorContent: {
     gap: 8,
-    paddingRight: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  weekSlider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 12,
+  },
+  arrowBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#DDE9BD',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowBtnDisabled: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
   },
   weekChip: {
     paddingHorizontal: 12,

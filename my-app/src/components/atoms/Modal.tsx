@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { ModalToastHost } from '@/components/atoms/Toast';
@@ -16,7 +15,7 @@ import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants
 import { X } from 'lucide-react-native';
 
 const USE_NATIVE_DRIVER = Platform.OS !== 'web';
-const SHEET_DURATION = 380;
+const MODAL_DURATION = 220;
 
 interface ModalProps {
   visible: boolean;
@@ -50,42 +49,49 @@ export function Modal({ visible, onClose, title, children }: ModalProps) {
         <Pressable style={styles.overlay} onPress={onClose} accessibilityLabel="Fechar" />
       </Animated.View>
 
-      <Sheet title={title} onClose={onClose}>
-        {children}
-      </Sheet>
+      <View style={styles.modalContent}>
+        <Sheet title={title} onClose={onClose}>
+          {children}
+        </Sheet>
+      </View>
       <ModalToastHost />
     </RNModal>
   );
 }
 
 function Sheet({ title, onClose, children }: Omit<ModalProps, 'visible'>) {
-  const { height } = useWindowDimensions();
-  const translateY = useRef(new Animated.Value(height)).current;
-  const scale = useRef(new Animated.Value(0.97)).current;
+  const translateY = useRef(new Animated.Value(12)).current;
+  const scale = useRef(new Animated.Value(0.96)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-
     Animated.parallel([
-      Animated.spring(translateY, {
+      Animated.timing(translateY, {
         toValue: 0,
-        friction: 22,
-        tension: 180,
+        duration: MODAL_DURATION,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: USE_NATIVE_DRIVER,
       }),
       Animated.timing(scale, {
         toValue: 1,
-        duration: SHEET_DURATION,
+        duration: MODAL_DURATION,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: USE_NATIVE_DRIVER,
       }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: MODAL_DURATION,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
     ]).start();
-  }, []);
+  }, [opacity, scale, translateY]);
 
   return (
     <Animated.View
       style={[
         styles.sheet,
-        { transform: [{ translateY }, { scale }] },
+        { opacity, transform: [{ translateY }, { scale }] },
       ]}
     >
 
@@ -123,12 +129,12 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: Colors.white,
-
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    width: '90%',
+    maxWidth: 520,
+    borderRadius: BorderRadius.xl,
     paddingHorizontal: Spacing.five,
-    paddingBottom: Spacing.eight,
-    maxHeight: '92%',
+    paddingBottom: Spacing.five,
+    maxHeight: '85%',
 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -8 },
@@ -138,12 +144,12 @@ const styles = StyleSheet.create({
   },
   handleArea: {
     alignItems: 'center',
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.one,
   },
   handle: {
-    width: 44,
-    height: 5,
+    width: 36,
+    height: 4,
     backgroundColor: Colors.gray200,
     borderRadius: BorderRadius.full,
   },
@@ -152,7 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: Spacing.two,
-    marginBottom: Spacing.five,
+    marginBottom: Spacing.four,
   },
   title: {
     fontSize: FontSize.xl,
@@ -169,5 +175,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.gray200,
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.four,
   },
 });

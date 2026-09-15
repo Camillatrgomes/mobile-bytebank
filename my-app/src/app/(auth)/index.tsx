@@ -22,7 +22,7 @@ export default function LandingScreen() {
   const { width } = useWindowDimensions();
   const [menuOpen, setMenuOpen] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const sectionOffsets = useRef({ hero: 0, services: 0 });
+  const sectionOffsets = useRef({ hero: 0, services: 0, content: 0 });
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
@@ -106,7 +106,12 @@ export default function LandingScreen() {
           </View>
         </View>
 
-        <View style={styles.mainContentSection}>
+        <View
+          style={styles.mainContentSection}
+          onLayout={({ nativeEvent }) => {
+            sectionOffsets.current.content = nativeEvent.layout.y;
+          }}
+        >
           
           <LinearGradient
             colors={['#fcfcfc', '#eccf89']}
@@ -125,7 +130,7 @@ export default function LandingScreen() {
             <View
               style={styles.heroBox}
               onLayout={({ nativeEvent }) => {
-                sectionOffsets.current.hero = nativeEvent.layout.y;
+                sectionOffsets.current.hero = sectionOffsets.current.content + nativeEvent.layout.y;
               }}
             >
               <Text style={styles.heroHeading}>
@@ -142,7 +147,7 @@ export default function LandingScreen() {
             <View
               style={styles.vantagensBox}
               onLayout={({ nativeEvent }) => {
-                sectionOffsets.current.services = nativeEvent.layout.y;
+                sectionOffsets.current.services = sectionOffsets.current.content + nativeEvent.layout.y;
               }}
             >
               <Text style={styles.vantagensTitle}>Vantagens do nosso banco:</Text>

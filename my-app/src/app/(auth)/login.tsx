@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   panel: {
     backgroundColor: Colors.authPanel,
     borderRadius: BorderRadius.xl,
-    padding: Spacing.six,
+    padding: Spacing.three,
     gap: Spacing.three,
     overflow: 'hidden',
   },
