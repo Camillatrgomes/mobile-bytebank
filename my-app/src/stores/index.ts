@@ -1,3 +1,4 @@
+import type { Subscription } from 'rxjs';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { container } from '@/infra/container';
@@ -36,19 +37,30 @@ export const useAppStore = create<StoreState>()(
       }),
       merge: (persisted, current) => {
         const cache = persisted as Partial<StoreState> | undefined;
-        // cachedAt já preenchido: um loadAccount chegou antes da hidratação e é mais novo.
+        // cachedAt já preenchido: o stream emitiu antes da hidratação e é mais novo.
         if (!cache || current.cachedAt !== null || !isCacheUsable(cache, current.user?.id ?? null)) {
           return current;
         }
-        // Com cache válido não há skeleton: o loadAccount revalida em segundo plano.
+        // Com cache válido não há skeleton: o stream de transações atualiza em segundo plano.
         return { ...current, ...cache, isAccountLoading: false };
       },
     },
   ),
 );
 
+const live = new Set<Subscription>();
+
+/** Registra uma assinatura ao vivo para o logout encerrá-la antes de mexer na store. */
+export function trackLive(subscription: Subscription): Subscription {
+  live.add(subscription);
+  subscription.add(() => live.delete(subscription));
+  return subscription;
+}
+
 /** Zera o estado do usuário no logout. isAuthReady fica: a sessão já foi verificada. */
 export function resetAll(): void {
+  // Antes de qualquer set: uma emissão depois do forgetCache recriaria a chave do cache.
+  live.forEach((subscription) => subscription.unsubscribe());
   cancelAccountRequests();
   useAppStore.setState({
     user: null,
@@ -58,8 +70,7 @@ export function resetAll(): void {
   });
 }
 
-/** Recarrega conta e extrato depois de uma escrita, furando a deduplicação. */
-export function refreshAccount(): Promise<void> {
+/** Recarrega o extrato depois de uma escrita. */
+export function refreshAccount(): void {
   revalidateStatement();
-  return useAppStore.getState().loadAccount({ force: true });
 }

@@ -5,6 +5,7 @@ import { deleteTransaction } from '@/domain/usecases/deleteTransaction';
 import { login } from '@/domain/usecases/login';
 import { register } from '@/domain/usecases/register';
 import { updateTransaction } from '@/domain/usecases/updateTransaction';
+import { watchAllTransactions } from '@/domain/usecases/watchAllTransactions';
 import { watchStatement } from '@/domain/usecases/watchStatement';
 import { FirebaseAuthRepository } from './repositories/FirebaseAuthRepository';
 import { FirestoreTransactionRepository } from './repositories/FirestoreTransactionRepository';
@@ -23,6 +24,7 @@ export const container = {
   updateTransaction: updateTransaction({ transactions }),
   deleteTransaction: deleteTransaction({ transactions }),
   watchStatement: watchStatement({ transactions }),
+  watchAllTransactions: watchAllTransactions({ transactions }),
   attachReceipt: attachReceipt({ receipts }),
   validateReceipt: (file: PickedFile) => receipts.validate(file),
   loadAccount: () => accounts.getSnapshot(),

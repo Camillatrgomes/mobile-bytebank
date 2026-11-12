@@ -6,15 +6,19 @@ import type { StoreState } from './index';
 
 export interface AccountSlice {
   account: Account | null;
-  /** Todas as transações da conta: base do saldo, nunca a página filtrada do extrato. */
+  /** Todas as transações da conta, ao vivo: base do saldo, nunca a página filtrada do extrato. */
   transactions: readonly Transaction[];
-  /** Só na primeira carga, como o isLoading do SWR: recargas não piscam a tela. */
+  /** Só até a primeira emissão do stream (ou o cache hidratado): depois a tela não pisca. */
   isAccountLoading: boolean;
   accountError: Error | null;
-  /** uid dono do cache persistido e quando o servidor o confirmou pela última vez (epoch ms). */
+  /** uid dono do cache persistido e quando o stream o atualizou pela última vez (epoch ms). */
   cacheOwner: string | null;
   cachedAt: number | null;
-  loadAccount: (options?: { force?: boolean }) => Promise<void>;
+  /** Id e tipo da conta, que só o backend conhece: uma vez por sessão. */
+  loadAccount: () => Promise<void>;
+  /** Emissão do stream de transações; uid é o dono do stream que emitiu. */
+  setTransactions: (uid: string, transactions: readonly Transaction[]) => void;
+  failTransactions: (error: Error) => void;
 }
 
 export const initialAccountState = {
@@ -35,27 +39,20 @@ export function cancelAccountRequests(): void {
   inFlight = null;
 }
 
-export const createAccountSlice: StateCreator<StoreState, [['zustand/persist', unknown]], [], AccountSlice> = (set, get) => ({
+export const createAccountSlice: StateCreator<StoreState, [['zustand/persist', unknown]], [], AccountSlice> = (set) => ({
   ...initialAccountState,
-  loadAccount: ({ force = false } = {}) => {
-    if (inFlight && !force) return inFlight;
+  loadAccount: () => {
+    if (inFlight) return inFlight;
 
     const requestId = ++latestRequest;
     const request = (async () => {
       try {
-        const { account, transactions } = await container.loadAccount();
+        const { account } = await container.loadAccount();
         if (requestId !== latestRequest) return;
-        set({
-          account,
-          transactions,
-          isAccountLoading: false,
-          accountError: null,
-          cacheOwner: get().user?.id ?? null,
-          cachedAt: Date.now(),
-        });
+        set({ account, accountError: null });
       } catch (error) {
         if (requestId !== latestRequest) return;
-        set({ accountError: error as Error, isAccountLoading: false });
+        set({ accountError: error as Error });
       } finally {
         if (requestId === latestRequest) inFlight = null;
       }
@@ -63,4 +60,7 @@ export const createAccountSlice: StateCreator<StoreState, [['zustand/persist', u
     inFlight = request;
     return request;
   },
+  setTransactions: (uid, transactions) =>
+    set({ transactions, isAccountLoading: false, cacheOwner: uid, cachedAt: Date.now() }),
+  failTransactions: (error) => set({ accountError: error, isAccountLoading: false }),
 });

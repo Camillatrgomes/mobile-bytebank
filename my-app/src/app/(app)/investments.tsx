@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
 import { InvestmentsKPICards } from '@/components/molecules/InvestmentsKPICards';
@@ -21,7 +21,7 @@ export default function InvestmentsScreen() {
   const months = getLastMonths(6);
   const [selectedMonth, setSelectedMonth] = useState(months[0].value);
 
-  const { transactions, receitas, despesas, lucro, byCategory, isLoading, mutate } =
+  const { transactions, receitas, despesas, lucro, byCategory, isLoading } =
     useTransactionList(selectedMonth);
 
   return (
@@ -31,7 +31,6 @@ export default function InvestmentsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => mutate()} />}
       >
         {/* Header card like MFE */}
         <View style={styles.headerCard}>

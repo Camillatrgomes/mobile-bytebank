@@ -12,7 +12,7 @@ import {
   type QueryConstraint,
   type QuerySnapshot,
 } from 'firebase/firestore';
-import type { NewTransactionInput } from '@/domain/entities/Transaction';
+import type { NewTransactionInput, Transaction } from '@/domain/entities/Transaction';
 import type {
   StatementQuery,
   StatementSnapshot,
@@ -59,6 +59,12 @@ function snapshots(target: Query): Observable<QuerySnapshot> {
 
 // Lê direto do Firestore; escreve pela API, porque as rules bloqueiam escrita do cliente.
 export class FirestoreTransactionRepository implements TransactionRepository {
+  watchAll(uid: string): Observable<readonly Transaction[]> {
+    return snapshots(query(collection(db, 'users', uid, 'transactions'), orderBy('date', 'desc'))).pipe(
+      map((snapshot) => snapshot.docs.map(toTransaction))
+    );
+  }
+
   watchStatement(uid: string, statement: StatementQuery): Observable<StatementSnapshot> {
     const base = buildStatementQuery(uid, statement);
     if (!base) return of(EMPTY_STATEMENT);

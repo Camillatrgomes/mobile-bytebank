@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import type { Transaction } from '@/domain/entities/Transaction';
-import { useAppStore } from '@/stores';
 import { useAccountData } from '@/stores/selectors';
 
 export interface ITransaction {
@@ -25,7 +24,6 @@ function normalize(t: Transaction): ITransaction {
 
 export function useTransactionList(month?: string) {
   const { transactions, isLoading, error } = useAccountData();
-  const loadAccount = useAppStore((s) => s.loadAccount);
 
   const normalized = useMemo(() => {
     let list = transactions.map(normalize);
@@ -54,7 +52,5 @@ export function useTransactionList(month?: string) {
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [normalized]);
 
-  const mutate = () => loadAccount({ force: true });
-
-  return { transactions: normalized, receitas, despesas, lucro, byCategory, isLoading, error, mutate };
+  return { transactions: normalized, receitas, despesas, lucro, byCategory, isLoading, error };
 }

@@ -90,7 +90,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
         return;
       }
 
-      await refreshAccount();
+      refreshAccount();
       toast('Transação atualizada!', 'success');
       onSuccess();
     } catch (err: any) {

@@ -18,6 +18,8 @@ export interface StatementSnapshot {
 }
 
 export interface TransactionRepository {
+  /** Todas as transações do usuário, da mais recente à mais antiga; reemite a cada mudança. */
+  watchAll(uid: string): Observable<readonly Transaction[]>;
   /** Stream contínuo: reemite a cada mudança no servidor. */
   watchStatement(uid: string, query: StatementQuery): Observable<StatementSnapshot>;
   create(accountId: string, input: NewTransactionInput): Promise<void>;

@@ -1,4 +1,4 @@
-import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
 import { SaldoDashboard } from '@/components/organisms/SaldoDashboard';
@@ -9,7 +9,6 @@ import { TransactionForm } from '@/components/organisms/TransactionForm';
 import { Button } from '@/components/atoms/Button';
 import { FadeInView } from '@/components/atoms/FadeInView';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
-import { useAppStore } from '@/stores';
 import { useAccountData, useAccountSummary, useTransactionForm } from '@/stores/selectors';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 
@@ -17,7 +16,6 @@ export default function HomeScreen() {
   const { account, transactions, isLoading } = useAccountData();
   const { saldo, receitas, despesas, metaMessage } = useAccountSummary();
   const { openForm } = useTransactionForm();
-  const loadAccount = useAppStore((s) => s.loadAccount);
 
   const recentTransactions = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -31,9 +29,6 @@ export default function HomeScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={() => loadAccount({ force: true })} />
-        }
       >
         {isLoading ? (
           <>

@@ -105,7 +105,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
         return;
       }
 
-      await refreshAccount();
+      refreshAccount();
       toast('Transação criada com sucesso!', 'success');
       handleClose();
     } catch (err: any) {
