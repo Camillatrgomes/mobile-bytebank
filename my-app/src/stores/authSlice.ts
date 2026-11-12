@@ -1,11 +1,6 @@
 import type { StateCreator } from 'zustand';
+import type { AuthUser } from '@/domain/entities/User';
 import type { StoreState } from './index';
-
-export interface AuthUser {
-  id: string;
-  username: string;
-  email: string;
-}
 
 export interface AuthSlice {
   user: AuthUser | null;
