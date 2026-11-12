@@ -1,4 +1,3 @@
-import { mutate } from 'swr';
 import { container } from '@/infra/container';
 import { resetAll, useAppStore } from '@/stores';
 
@@ -39,8 +38,6 @@ export function useAuth() {
       resetAll();
       await useAppStore.persist.clearStorage();
       await container.forgetCache();
-      // Limpa o cache do SWR para o próximo usuário não ver os dados do anterior.
-      await mutate(() => true, undefined, { revalidate: false });
     }
   }
 

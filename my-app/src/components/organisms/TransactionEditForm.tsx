@@ -6,7 +6,6 @@ import { Button } from '@/components/atoms/Button';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { container } from '@/infra/container';
 import { useToast } from '@/components/atoms/Toast';
-import { refreshAccount } from '@/stores';
 import { useAccountSummary } from '@/stores/selectors';
 import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
 import {
@@ -90,7 +89,6 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
         return;
       }
 
-      refreshAccount();
       toast('Transação atualizada!', 'success');
       onSuccess();
     } catch (err: any) {

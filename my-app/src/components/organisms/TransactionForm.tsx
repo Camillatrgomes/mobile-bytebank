@@ -8,7 +8,6 @@ import { FloatInput } from '@/components/atoms/FloatInput';
 import { container } from '@/infra/container';
 import { suggestCategory } from '@/lib/categoryHelpers';
 import { useToast } from '@/components/atoms/Toast';
-import { refreshAccount } from '@/stores';
 import { useAccountSummary, useTransactionForm } from '@/stores/selectors';
 import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
 import {
@@ -105,7 +104,6 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
         return;
       }
 
-      refreshAccount();
       toast('Transação criada com sucesso!', 'success');
       handleClose();
     } catch (err: any) {

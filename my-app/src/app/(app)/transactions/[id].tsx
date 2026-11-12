@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { refreshAccount } from '@/stores';
 import { useAccountData } from '@/stores/selectors';
 import { TransactionEditForm } from '@/components/organisms/TransactionEditForm';
 import { Badge } from '@/components/atoms/Badge';
@@ -45,8 +44,6 @@ export default function TransactionDetailScreen() {
       await container.deleteTransaction(id);
       toast('Transação excluída', 'success');
       router.back();
-      // Revalidate after navigating to avoid re-render with missing transaction
-      refreshAccount();
     } catch (err: any) {
       toast(err.message ?? 'Erro ao excluir', 'error');
     } finally {

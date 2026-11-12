@@ -2,7 +2,6 @@ import type { Subscription } from 'rxjs';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { container } from '@/infra/container';
-import { revalidateStatement } from '@/lib/statementRevalidation';
 import {
   cancelAccountRequests,
   createAccountSlice,
@@ -12,15 +11,17 @@ import {
 import { isCacheUsable } from './cachePolicy';
 import { createAuthSlice, type AuthSlice } from './authSlice';
 import { createFiltersSlice, initialFilters, type FiltersSlice } from './filtersSlice';
+import { createStatementSlice, initialStatementState, type StatementSlice } from './statementSlice';
 import { createUiSlice, type UiSlice } from './uiSlice';
 
-export type StoreState = AuthSlice & AccountSlice & FiltersSlice & UiSlice;
+export type StoreState = AuthSlice & AccountSlice & StatementSlice & FiltersSlice & UiSlice;
 
 export const useAppStore = create<StoreState>()(
   persist(
     (...a) => ({
       ...createAuthSlice(...a),
       ...createAccountSlice(...a),
+      ...createStatementSlice(...a),
       ...createFiltersSlice(...a),
       ...createUiSlice(...a),
     }),
@@ -65,12 +66,8 @@ export function resetAll(): void {
   useAppStore.setState({
     user: null,
     ...initialAccountState,
+    ...initialStatementState,
     filters: initialFilters(),
     isFormOpen: false,
   });
-}
-
-/** Recarrega o extrato depois de uma escrita. */
-export function refreshAccount(): void {
-  revalidateStatement();
 }
