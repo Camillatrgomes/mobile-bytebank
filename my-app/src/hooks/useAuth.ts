@@ -37,6 +37,8 @@ export function useAuth() {
       await container.logout();
     } finally {
       resetAll();
+      await useAppStore.persist.clearStorage();
+      await container.forgetCache();
       // Limpa o cache do SWR para o próximo usuário não ver os dados do anterior.
       await mutate(() => true, undefined, { revalidate: false });
     }

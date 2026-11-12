@@ -28,9 +28,10 @@ export const container = {
   loadAccount: () => accounts.getSnapshot(),
   login: login({ auth, accounts }),
   register: register({ auth, accounts }),
-  // Apaga a chave junto: o próximo usuário não herda a sessão cifrada.
-  logout: async () => {
-    await auth.signOut();
+  logout: () => auth.signOut(),
+  // Depois do resetAll e do clearStorage: espera as escritas do persist, senão o seal recria a chave.
+  forgetCache: async () => {
+    await encryptedStateStorage.idle();
     await forgetKey();
   },
   encryptedStorage: encryptedStateStorage,
