@@ -6,6 +6,8 @@ import { formatCurrency } from '@/lib/formatters';
 import type { Transaction } from '@/domain/entities/Transaction';
 import { AlignCenter } from 'lucide-react-native';
 
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
+
 interface DespesasPorCategoriaChartProps {
   transactions: readonly Transaction[];
   isLoading?: boolean;

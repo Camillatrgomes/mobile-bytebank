@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AnimatedTouchable } from '@/components/atoms/AnimatedTouchable';
 import { useFilterActions, useFilters } from '@/stores/selectors';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { getLastMonths } from '@/lib/formatters';
