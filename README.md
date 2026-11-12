@@ -64,7 +64,7 @@ Decisões que valem declarar:
 - **Na web não existe SecureStore.** Lá a chave AES fica em `localStorage`, ao lado do payload, então a cifra na web só vale como limitação de desenvolvimento. No aparelho a chave fica no Keychain (iOS) ou Keystore (Android).
 - **O cache persiste só dado do servidor**: conta e transações, com TTL de 24 h e dono (`cacheOwner`). Se o dono não for o usuário logado ou o TTL tiver vencido, o cache é descartado. Filtros, UI e autenticação não são persistidos. Um payload ilegível é ignorado e o app abre com skeleton.
 - **Leitura direto do Firestore, escrita pela API.** As Security Rules só permitem ler `users/{uid}/transactions` do próprio usuário e negam toda escrita; criar, editar e excluir passam pela API, que usa o Admin SDK.
-- **Cache do Firestore na web.** Além do cache cifrado acima, no navegador o Firestore usa `persistentLocalCache` (IndexedDB), gerenciado pelo SDK e fora da nossa cifra.
+- **Cache do Firestore na web.** Além do cache cifrado acima, no navegador o Firestore usa `persistentLocalCache` (IndexedDB), gerenciado pelo SDK e fora da nossa cifra. Limitação conhecida: esse cache do Firestore não é apagado no logout (o cache cifrado da store e a chave são).
 - **Sessão do Firebase Auth:** no nativo, a persistência usa o `encryptedStateStorage`; na web o Firebase usa `browserLocalPersistence`, sem cifra nossa.
 - **Limitações conhecidas:** com várias abas abertas, o logout numa aba apaga a chave mas pode deixar, na outra, o blob cifrado antigo (ilegível sem a chave); o `persist` regrava (e recifra) o cache a cada mudança do store.
 
@@ -91,7 +91,7 @@ users/{uid}/transactions/{transactionId}   type, value, from, to, category, date
 | Animações | `Animated` (`FadeInView`) e react-native-reanimated |
 | Desenvolvimento | Firebase Emulator Suite, TypeScript, ESLint (`expo lint`) |
 
-O **SWR foi removido** na Fase 4 (substituído por Zustand + `onSnapshot`). O Context API ficou só como ligação do `onAuthStateChanged` (`contexts/AuthContext.tsx`), que escreve no store.
+O **SWR foi removido** na Fase 4 (substituído por Zustand + `onSnapshot`). O Context API ficou no `AuthContext` (ligação do `onAuthStateChanged`, que escreve no store) e no `ToastProvider`.
 
 ## Performance: code splitting
 
@@ -104,7 +104,7 @@ Medido com `npx expo export --platform web` (JS), antes e depois do lazy loading
 
 - O ganho vem das rotas assíncronas (`asyncRoutes`) e do `react-native-gifted-charts`, que só carrega em `/investments` (chunk `InvestmentsTable` de 396 KB). Os gráficos do `react-native-chart-kit` geram chunks de 3 a 4 KB: ganho marginal.
 - O `__common` de 3,88 MB ainda é baixado em toda página.
-- **Pré-carregamento:** `router.prefetch('/transactions')` e `('/investments')` rodam na home, mas só têm efeito no **build de produção da web** (`asyncRoutes.web = "production"`). No desenvolvimento as rotas são síncronas e não há chunks de rota para pré-buscar. O efeito do `prefetch` não foi observado em execução; só o export estático gerando os chunks. No nativo as rotas também são síncronas (`asyncRoutes.default = false`).
+- **Pré-carregamento:** `router.prefetch('/transactions')` e `('/investments')` rodam na home e disparam a ação `PRELOAD` do roteador, que pré-renderiza a rota em todas as plataformas. Com `asyncRoutes` (`asyncRoutes.web = "production"`, só no build web de produção) as rotas são `React.lazy`, então esse pré-render também antecipa o download do chunk da rota; no desenvolvimento e no nativo (`asyncRoutes.default = false`) as rotas são síncronas e não há chunk a antecipar. O efeito do `prefetch` não foi observado em execução; só o export estático gerando os chunks.
 - O extrato usa `FlatList` com `initialNumToRender={10}`, `maxToRenderPerBatch={10}` e `windowSize={5}`.
 
 Para reproduzir, a partir de `my-app`: `npx expo export --platform web` e compare os arquivos de `dist/_expo/static/js/web` (apague `dist` depois).
@@ -232,7 +232,7 @@ npm --prefix my-app run web
 
 Acesse http://localhost:8081 e entre com **teste@teste.com** / **teste123**.
 
-- **Web aberta por IP da rede** (por exemplo `http://192.168.0.10:8081`, de outro computador): a API só aceita navegadores de origens listadas em `CORS_ORIGINS`. Crie `backend/.env` com `CORS_ORIGINS=http://localhost:8081,http://192.168.0.10:8081` (com o seu IP) e reinicie a API. O app nativo não envia `Origin` e não é afetado.
+- **Web aberta por IP da rede** (por exemplo `http://192.168.0.10:8081`, de outro computador): a API só aceita navegadores de origens listadas em `CORS_ORIGINS`. O `npm run dev` não lê `backend/.env` (só o `dev:cloud` lê), então defina a variável no terminal, com o seu IP, antes de iniciar a API. PowerShell: `$env:CORS_ORIGINS="http://localhost:8081,http://192.168.0.10:8081"`; bash: `export CORS_ORIGINS=http://localhost:8081,http://192.168.0.10:8081`. Depois reinicie a API. O app nativo não envia `Origin` e não é afetado.
 - Para Android ou iOS, use `npm --prefix my-app run android` ou `run ios`. No emulador Android, o app já aponta para `10.0.2.2`.
 - Para usar um celular de verdade, veja [Rodando no celular](#rodando-no-celular-expo-go).
 - Painel dos emuladores: http://localhost:4000.
