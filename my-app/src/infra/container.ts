@@ -19,6 +19,7 @@ export const container = {
   watchStatement: watchStatement({ transactions }),
   attachReceipt: attachReceipt({ receipts }),
   validateReceipt: (file: PickedFile) => receipts.validate(file),
+  loadAccount: () => accounts.getSnapshot(),
   provisionAccount: (username: string | null) => accounts.provision(username),
 } as const;
 

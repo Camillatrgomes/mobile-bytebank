@@ -5,6 +5,11 @@ export interface Account {
   readonly type: string;
 }
 
+export interface AccountSnapshot {
+  readonly account: Account | null;
+  readonly transactions: readonly Transaction[];
+}
+
 export interface AccountSummary {
   readonly saldo: number;
   readonly receitas: number;

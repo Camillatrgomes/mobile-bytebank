@@ -8,7 +8,8 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/infra/firebase/client';
 import { container } from '@/infra/container';
-import { toAuthUser, useAuthContext } from '@/contexts/AuthContext';
+import { toAuthUser } from '@/contexts/AuthContext';
+import { resetAll, useAppStore } from '@/stores';
 
 interface LoginPayload {
   email: string;
@@ -46,7 +47,9 @@ async function signOutAndThrow(err: unknown): Promise<never> {
 }
 
 export function useAuth() {
-  const { user, isAuthenticated, setUser } = useAuthContext();
+  const user = useAppStore((s) => s.user);
+  const setUser = useAppStore((s) => s.setUser);
+  const isAuthenticated = user !== null;
 
   async function login({ email, password }: LoginPayload): Promise<void> {
     try {
@@ -78,6 +81,7 @@ export function useAuth() {
 
   async function logout(): Promise<void> {
     await signOut(auth);
+    resetAll();
     // Limpa o cache do SWR para o próximo usuário não ver os dados do anterior.
     await mutate(() => true, undefined, { revalidate: false });
   }

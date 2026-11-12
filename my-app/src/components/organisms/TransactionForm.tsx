@@ -8,8 +8,8 @@ import { FloatInput } from '@/components/atoms/FloatInput';
 import { container } from '@/infra/container';
 import { suggestCategory } from '@/lib/categoryHelpers';
 import { useToast } from '@/components/atoms/Toast';
-import { revalidateAccount } from '@/hooks/useAccount';
-import { useTransactions } from '@/contexts/TransactionsContext';
+import { refreshAccount } from '@/stores';
+import { useAccountSummary, useTransactionForm } from '@/stores/selectors';
 import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
 import {
   createTransactionSchema,
@@ -28,7 +28,8 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ accountId }: TransactionFormProps) {
-  const { isFormOpen, closeForm, saldo } = useTransactions();
+  const { isFormOpen, closeForm } = useTransactionForm();
+  const { saldo } = useAccountSummary();
   const toast = useToast();
   const [receipt, setReceipt] = useState<PickedFile | null>(null);
   const schema = useMemo(() => createTransactionSchema({ availableBalance: saldo }), [saldo]);
@@ -104,7 +105,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
         return;
       }
 
-      await revalidateAccount();
+      await refreshAccount();
       toast('Transação criada com sucesso!', 'success');
       handleClose();
     } catch (err: any) {

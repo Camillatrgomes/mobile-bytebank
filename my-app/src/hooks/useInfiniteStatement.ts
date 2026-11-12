@@ -9,15 +9,13 @@ import {
   startAfter,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
+import type { Transaction } from '@/domain/entities/Transaction';
+import { toTransaction } from '@/infra/firebase/transactionMapper';
 import { buildStatementQuery } from '@/infra/repositories/FirestoreTransactionRepository';
 import { registerStatementRevalidator } from '@/lib/statementRevalidation';
-import { useAuthContext } from '@/contexts/AuthContext';
-import {
-  toStatementQuery,
-  useTransactionFilters,
-  type TransactionFilters,
-} from '@/contexts/TransactionsContext';
-import type { IApiTransaction } from './useAccount';
+import { useAppStore } from '@/stores';
+import { toStatementQuery, type TransactionFilters } from '@/stores/filtersSlice';
+import { useFilters } from '@/stores/selectors';
 
 export const STATEMENT_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -25,18 +23,13 @@ const SEARCH_DEBOUNCE_MS = 300;
 type StatementFilters = TransactionFilters;
 
 interface StatementPage {
-  transactions: IApiTransaction[];
+  transactions: Transaction[];
   cursor: QueryDocumentSnapshot | null;
 }
 
 // O tamanho de página não entra na query base; a paginação aplica o limit depois.
 const statementQuery = (uid: string, filters: StatementFilters) =>
   buildStatementQuery(uid, toStatementQuery(filters, STATEMENT_PAGE_SIZE));
-
-const toTransaction = (snapshot: QueryDocumentSnapshot): IApiTransaction => {
-  const data = snapshot.data();
-  return { ...data, id: snapshot.id, date: data.date.toDate().toISOString() } as IApiTransaction;
-};
 
 type PageKey = readonly ['statement', string, StatementFilters, number, QueryDocumentSnapshot | null];
 
@@ -64,10 +57,8 @@ async function fetchCount([, uid, filters]: readonly ['statement-count', string,
 
 /** Extrato paginado por cursor direto do Firestore, com os filtros traduzidos para a query. */
 export function useInfiniteStatement(pageSize: number = STATEMENT_PAGE_SIZE) {
-  const uid = useAuthContext().user?.id ?? null;
-  const {
-    filters: { month, type, category, search, startDate, endDate },
-  } = useTransactionFilters();
+  const uid = useAppStore((s) => s.user?.id ?? null);
+  const { month, type, category, search, startDate, endDate } = useFilters();
 
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   useEffect(() => {

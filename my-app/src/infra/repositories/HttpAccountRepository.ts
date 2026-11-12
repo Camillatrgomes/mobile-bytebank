@@ -1,16 +1,23 @@
-import type { Account } from '@/domain/entities/Account';
+import type { AccountSnapshot } from '@/domain/entities/Account';
 import type { AccountRepository } from '@/domain/repositories/AccountRepository';
+import { fromRecord, type TransactionRecord } from '../firebase/transactionMapper';
 import { apiFetch } from '../http/apiClient';
 
 interface AccountResponse {
-  result: { account: { id: string; type: string }[] };
+  result: {
+    account: { id: string; type: string }[];
+    transactions: (TransactionRecord & { id: string })[];
+  };
 }
 
 export class HttpAccountRepository implements AccountRepository {
-  async getCurrent(): Promise<Account | null> {
-    const response = await apiFetch<AccountResponse>('/account');
-    const account = response?.result?.account?.[0];
-    return account ? { id: account.id, type: account.type } : null;
+  async getSnapshot(): Promise<AccountSnapshot> {
+    const { result } = await apiFetch<AccountResponse>('/account');
+    const account = result?.account?.[0];
+    return {
+      account: account ? { id: account.id, type: account.type } : null,
+      transactions: (result?.transactions ?? []).map(({ id, ...record }) => fromRecord(id, record)),
+    };
   }
 
   async provision(username: string | null): Promise<void> {

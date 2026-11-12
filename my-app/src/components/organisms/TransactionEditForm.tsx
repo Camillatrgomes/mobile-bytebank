@@ -6,8 +6,8 @@ import { Button } from '@/components/atoms/Button';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { container } from '@/infra/container';
 import { useToast } from '@/components/atoms/Toast';
-import { revalidateAccount } from '@/hooks/useAccount';
-import { useTransactions } from '@/contexts/TransactionsContext';
+import { refreshAccount } from '@/stores';
+import { useAccountSummary } from '@/stores/selectors';
 import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
 import {
   createTransactionSchema,
@@ -21,20 +21,20 @@ import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
 import type { PickedFile } from '@/domain/repositories/ReceiptRepository';
-import type { IApiTransaction } from '@/hooks/useAccount';
+import { signedValue, type Transaction } from '@/domain/entities/Transaction';
 
 interface TransactionEditFormProps {
-  transaction: IApiTransaction;
+  transaction: Transaction;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
 export function TransactionEditForm({ transaction, onSuccess, onCancel }: TransactionEditFormProps) {
   const toast = useToast();
-  const { saldo } = useTransactions();
+  const { saldo } = useAccountSummary();
   const [receipt, setReceipt] = useState<PickedFile | null>(null);
   // O valor original volta ao saldo: editar não pode ser barrado pelo próprio lançamento.
-  const availableBalance = saldo - transaction.value;
+  const availableBalance = saldo - signedValue(transaction);
   const schema = useMemo(() => createTransactionSchema({ availableBalance }), [availableBalance]);
 
   const {
@@ -49,8 +49,8 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
     defaultValues: {
       type: transaction.type,
       value: formatAmountInput(transaction.value),
-      description: transaction.to ?? transaction.from ?? '',
-      category: transaction.category ?? '',
+      description: transaction.description,
+      category: transaction.category,
     },
   });
 
@@ -90,7 +90,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
         return;
       }
 
-      await revalidateAccount();
+      await refreshAccount();
       toast('Transação atualizada!', 'success');
       onSuccess();
     } catch (err: any) {
@@ -200,7 +200,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
           )}
         </View>
 
-        <ReceiptPicker file={receipt} onChange={setReceipt} currentName={transaction.anexo} />
+        <ReceiptPicker file={receipt} onChange={setReceipt} currentName={transaction.receipt?.name || null} />
       </View>
 
       <View style={styles.actions}>

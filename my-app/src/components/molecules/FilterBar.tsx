@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useTransactionFilters } from '@/contexts/TransactionsContext';
+import { useFilterActions, useFilters } from '@/stores/selectors';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { getLastMonths } from '@/lib/formatters';
 import { FloatInput } from '@/components/atoms/FloatInput';
@@ -14,14 +14,8 @@ import { DateRangeFilter } from '@/components/molecules/DateRangeFilter';
 import { DEBIT_CATEGORIES, CREDIT_CATEGORIES } from '@/constants/categories';
 
 export function FilterBar() {
-  const {
-    filters: { month, type, category, search, startDate, endDate },
-    setMonth,
-    setType,
-    setCategory,
-    setSearch,
-    resetFilters,
-  } = useTransactionFilters();
+  const { month, type, category, search, startDate, endDate } = useFilters();
+  const { setMonth, setType, setCategory, setSearch, resetFilters } = useFilterActions();
   const isAllMonths = month === '' && !startDate && !endDate;
   const months = getLastMonths(6);
   // "Outros" existe nas duas listas.
