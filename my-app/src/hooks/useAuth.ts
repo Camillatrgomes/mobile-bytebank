@@ -33,10 +33,13 @@ export function useAuth() {
   }
 
   async function logout(): Promise<void> {
-    await container.logout();
-    resetAll();
-    // Limpa o cache do SWR para o próximo usuário não ver os dados do anterior.
-    await mutate(() => true, undefined, { revalidate: false });
+    try {
+      await container.logout();
+    } finally {
+      resetAll();
+      // Limpa o cache do SWR para o próximo usuário não ver os dados do anterior.
+      await mutate(() => true, undefined, { revalidate: false });
+    }
   }
 
   return { user, isAuthenticated, login, register, updateUsername, logout };
