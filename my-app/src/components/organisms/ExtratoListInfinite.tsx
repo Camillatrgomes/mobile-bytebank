@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -86,6 +87,11 @@ export function ExtratoListInfinite({
           transactions.length === 0 && styles.emptyContent,
         ]}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        // Na web, removeClippedSubviews esconde linhas indevidamente.
+        removeClippedSubviews={Platform.OS !== 'web'}
         onEndReached={hasMore ? onEndReached : undefined}
         onEndReachedThreshold={0.4}
         refreshControl={
