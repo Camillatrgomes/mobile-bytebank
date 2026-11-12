@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Modal } from '@/components/atoms/Modal';
 import { Button } from '@/components/atoms/Button';
 import { FloatInput } from '@/components/atoms/FloatInput';
@@ -19,6 +19,7 @@ import {
 } from '@/lib/transactionSchema';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
+import { AnimatedTouchable } from '@/components/atoms/AnimatedTouchable';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
 import type { PickedFile } from '@/domain/repositories/ReceiptRepository';
 
@@ -50,7 +51,6 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
   const description = watch('description');
   const categories = type === 'Credit' ? CREDIT_CATEGORIES : DEBIT_CATEGORIES;
 
-  // Auto-suggest category from description
   useEffect(() => {
     if (description.length > 3) {
       const suggested = suggestCategory(description);
@@ -60,8 +60,6 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
     }
   }, [description, categories]);
 
-  // Limpa a categoria apenas quando ela não existe na lista do tipo selecionado,
-  // preservando o que já estava preenchido (inclusive categorias comuns aos dois tipos).
   useEffect(() => {
     const current = getValues('category');
     if (current && !categories.includes(current as never)) {
@@ -122,7 +120,8 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
               control={control}
               name="type"
               render={({ field }) => (
-                <TouchableOpacity
+                <AnimatedTouchable
+                  scaleTo={0.93} activeOpacity={1}
                   style={[
                     styles.typeBtn,
                     field.value === t && (t === 'Credit' ? styles.typeBtnActiveCredit : styles.typeBtnActiveDebit),
@@ -139,7 +138,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
                       {t === 'Debit' ? 'Saída' : 'Entrada'}
                     </Text>
                   </View>
-                </TouchableOpacity>
+                </AnimatedTouchable>
               )}
             />
           ))}
@@ -174,7 +173,6 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
             )}
           />
 
-          {/* Category selector */}
           <View>
             <Text style={styles.categoryLabel}>Categoria</Text>
             <View style={styles.categoryGrid}>
@@ -184,7 +182,8 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
                   control={control}
                   name="category"
                   render={({ field }) => (
-                    <TouchableOpacity
+                    <AnimatedTouchable
+                  scaleTo={0.93} activeOpacity={1}
                       style={[styles.catChip, field.value === cat && styles.catChipActive]}
                       onPress={() => field.onChange(cat)}
                     >
@@ -196,7 +195,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
                       >
                         {cat}
                       </Text>
-                    </TouchableOpacity>
+                    </AnimatedTouchable>
                   )}
                 />
               ))}
@@ -250,6 +249,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
     color: Colors.gray500,
+    paddingHorizontal:  8,
   },
   typeBtnTextActive: {
     color: Colors.gray800,

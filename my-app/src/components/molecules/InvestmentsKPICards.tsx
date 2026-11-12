@@ -23,15 +23,15 @@ interface KPICardProps {
 function KPICard({ label, value, icon, iconBg, borderColor, prefix = '', valueColor }: KPICardProps) {
   return (
     <View style={[styles.kpiCard, { borderColor }]}>
-      <View style={styles.iconRow}>
-        <View style={[styles.iconBg, { backgroundColor: iconBg }]}>
-          {icon}
-        </View>
-        <Text style={styles.kpiLabel}>{label}</Text>
+      <View style={[styles.iconBg, { backgroundColor: iconBg }]}>
+        {icon}
       </View>
-      <Text style={[styles.kpiValue, { color: valueColor }]}>
-        {prefix}{formatCurrency(value)}
-      </Text>
+      <View style={styles.textArea}>
+        <Text style={styles.kpiLabel}>{label}</Text>
+        <Text style={[styles.kpiValue, { color: valueColor }]} numberOfLines={1} adjustsFontSizeToFit>
+          {prefix}{formatCurrency(value)}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -46,7 +46,7 @@ export function InvestmentsKPICards({ receitas, despesas, lucro }: InvestmentsKP
         valueColor={Colors.income}
         iconBg="#dcfce7"
         borderColor="#bbf7d0"
-        icon={<TrendingUp size={18} color={Colors.income} />}
+        icon={<TrendingUp size={20} color={Colors.income} />}
       />
       <KPICard
         label="Despesas"
@@ -54,7 +54,7 @@ export function InvestmentsKPICards({ receitas, despesas, lucro }: InvestmentsKP
         valueColor={Colors.expense}
         iconBg="#fee2e2"
         borderColor="#fecaca"
-        icon={<TrendingDown size={18} color={Colors.expense} />}
+        icon={<TrendingDown size={20} color={Colors.expense} />}
       />
       <KPICard
         label="Economia"
@@ -63,7 +63,7 @@ export function InvestmentsKPICards({ receitas, despesas, lucro }: InvestmentsKP
         iconBg={isPositive ? '#d1fae5' : '#fee2e2'}
         borderColor={isPositive ? '#a7f3d0' : '#fecaca'}
         prefix={isPositive ? '+' : '-'}
-        icon={<Wallet size={18} color={isPositive ? Colors.investmentDark : Colors.expense} />}
+        icon={<Wallet size={20} color={isPositive ? Colors.investmentDark : Colors.expense} />}
       />
     </View>
   );
@@ -77,32 +77,33 @@ const styles = StyleSheet.create({
   kpiCard: {
     flex: 1,
     backgroundColor: Colors.white,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: Spacing.four,
     gap: Spacing.two,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowRadius: 8,
     elevation: 2,
-  },
-  iconRow: {
-    flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 6,
   },
   iconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textArea: {
+    gap: 3,
+    width: '100%',
   },
   kpiLabel: {
     fontSize: FontSize.xs,
     color: Colors.gray500,
     fontWeight: FontWeight.medium,
+    letterSpacing: 0.2,
   },
   kpiValue: {
     fontSize: FontSize.sm,

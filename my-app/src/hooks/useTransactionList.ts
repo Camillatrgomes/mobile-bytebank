@@ -28,7 +28,7 @@ export function useTransactionList(month?: string) {
   const normalized = useMemo(() => {
     let list = transactions.map(normalize);
     if (month) {
-      list = list.filter((t) => t.date.startsWith(month));
+      list = list.filter((t) => t.date.slice(0, 7) === month);
     }
     return list;
   }, [transactions, month]);
@@ -49,7 +49,9 @@ export function useTransactionList(month?: string) {
     normalized.forEach((t) => {
       map[t.category] = (map[t.category] ?? 0) + t.amount;
     });
-    return Object.entries(map).map(([name, value]) => ({ name, value }));
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   }, [normalized]);
 
   return { transactions: normalized, receitas, despesas, lucro, byCategory, isLoading, error };

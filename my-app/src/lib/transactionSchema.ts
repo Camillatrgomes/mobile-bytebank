@@ -47,11 +47,11 @@ export function formatAmountInput(value: number): string {
 }
 
 interface TransactionSchemaOptions {
-  /** Saldo que uma saída pode consumir. */
+  /** Mantido para compatibilidade com os formulários que criam o schema. */
   availableBalance: number;
 }
 
-export function createTransactionSchema({ availableBalance }: TransactionSchemaOptions) {
+export function createTransactionSchema(_options: TransactionSchemaOptions) {
   return z
     .object({
       type: z.enum(['Credit', 'Debit']),
@@ -78,13 +78,6 @@ export function createTransactionSchema({ availableBalance }: TransactionSchemaO
         });
       }
 
-      if (data.type === 'Debit' && (parseAmount(data.value) ?? 0) > availableBalance) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['value'],
-          message: `Saldo insuficiente: disponível ${formatCurrency(Math.max(availableBalance, 0))}`,
-        });
-      }
     });
 }
 

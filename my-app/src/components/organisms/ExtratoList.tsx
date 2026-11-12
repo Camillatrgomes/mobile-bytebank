@@ -16,7 +16,6 @@ interface ExtratoListProps {
   showViewAll?: boolean;
 }
 
-/** Cabeçalho do card de extrato, com o divisor abaixo. */
 export function ExtratoCardHeader() {
   return (
     <>
@@ -28,7 +27,6 @@ export function ExtratoCardHeader() {
   );
 }
 
-/** Estado vazio do extrato, com CTA opcional para criar a primeira transação. */
 export function ExtratoEmptyState({
   message = 'Nenhuma transação por aqui ainda',
   onNewTransaction,
@@ -55,13 +53,6 @@ export function ExtratoEmptyState({
   );
 }
 
-/**
- * Extrato em card, renderizando a lista inteira de uma vez.
- *
- * Usado onde a lista é curta e previsível (os 5 lançamentos recentes da home).
- * Para a lista completa e paginada, use ExtratoListInfinite, que virtualiza
- * com FlatList.
- */
 export function ExtratoList({
   transactions,
   isLoading,

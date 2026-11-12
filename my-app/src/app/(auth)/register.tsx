@@ -78,8 +78,9 @@ export default function RegisterScreen() {
 
           {/* Header panel */}
           <AuthSidePanel 
-            heading="Criar Conta" 
-            subtext="Preencha os dados abaixo para começar" 
+            heading="Comece agora a transformar sua vida financeira." 
+            subtext="Crie sua conta gratuitamente e sem burocracia.
+" 
           />
 </View>
           {/* Form card */}
@@ -154,11 +155,11 @@ export default function RegisterScreen() {
               onPress={handleSubmit(onSubmit)}
               style={styles.submitBtn}
             >
-              Criar minha conta
+              Criar conta
             </Button>
 
             <View style={styles.loginRow}>
-              <Text style={styles.loginText}>Já tem conta? </Text>
+              <Text style={styles.loginText}>Já tem uma conta? </Text>
               <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
                 <Text style={styles.loginLink}>Entrar</Text>
               </TouchableOpacity>
@@ -219,14 +220,14 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     padding: Spacing.six,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 8,
   },
   formTitle: {
     fontSize: FontSize['2xl'],
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.semibold,
     color: Colors.gray900,
     marginBottom: Spacing.five,
   },

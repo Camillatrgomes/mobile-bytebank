@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { AnimatedTouchable } from '@/components/atoms/AnimatedTouchable';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
@@ -15,7 +16,12 @@ export function ExtratoItem({ transaction, onPress }: ExtratoItemProps) {
   const label = transaction.category || (isCredit ? 'Entrada' : 'Saída');
 
   return (
-    <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.75}>
+    <AnimatedTouchable
+      scaleTo={0.97}
+      activeOpacity={0.85}
+      style={styles.item}
+      onPress={onPress}
+    >
       {/* Left: icon */}
       <View style={[styles.iconBg, isCredit ? styles.iconBgCredit : styles.iconBgDebit]}>
         {isCredit
@@ -34,7 +40,7 @@ export function ExtratoItem({ transaction, onPress }: ExtratoItemProps) {
       <Text style={[styles.value, isCredit ? styles.valueCredit : styles.valueDebit]}>
         {isCredit ? '+ ' : '- '}{formatCurrency(Math.abs(transaction.value))}
       </Text>
-    </TouchableOpacity>
+    </AnimatedTouchable>
   );
 }
 

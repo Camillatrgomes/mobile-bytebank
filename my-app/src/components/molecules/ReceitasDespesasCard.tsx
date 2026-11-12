@@ -11,8 +11,7 @@ interface ReceitasDespesasCardProps {
 
 export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCardProps) {
   return (
-  <View>
-      <View style={styles.card}>
+    <View style={styles.card}>
       {/* Receitas */}
       <View style={styles.item}>
         <View style={styles.labelRow}>
@@ -25,8 +24,8 @@ export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCar
           {formatCurrency(receitas)}
         </Text>
       </View>
-      </View>
-         <View style={styles.card}>
+
+      <View style={styles.divider} />
 
       <View style={styles.item}>
         <View style={styles.labelRow}>
@@ -40,30 +39,26 @@ export function ReceitasDespesasCard({ receitas, despesas }: ReceitasDespesasCar
         </Text>
       </View>
     </View>
-  </View>
-
-
-  
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 15,
+    borderRadius: BorderRadius.lg,
     flexDirection: 'row',
     paddingHorizontal: Spacing.five,
     paddingVertical: Spacing.four,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 0,
-    margin: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+    alignItems: 'center',
   },
   item: {
     flex: 1,
-    gap: 6,
+    gap: 8,
   },
   labelRow: {
     flexDirection: 'row',
@@ -71,9 +66,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconBg: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -85,12 +80,12 @@ const styles = StyleSheet.create({
   value: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    paddingLeft: 38, // aligns below icon+gap
+    paddingLeft: 5, 
   },
   divider: {
     width: 1,
+    height: '80%',
     backgroundColor: Colors.gray200,
     marginHorizontal: Spacing.three,
-    marginVertical: 2,
   },
 });

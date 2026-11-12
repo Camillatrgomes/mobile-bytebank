@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -8,6 +10,8 @@ import {
   View,
 } from 'react-native';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
+
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -23,17 +27,17 @@ interface ButtonProps extends TouchableOpacityProps {
 }
 
 const variantConfig: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
-  primary: { bg: Colors.primary600, text: Colors.white },
-  secondary: { bg: Colors.secondary600, text: Colors.primary700 },
-  danger: { bg: Colors.expense, text: Colors.white },
-  ghost: { bg: 'transparent', text: Colors.primary600 },
-  outline: { bg: 'transparent', text: Colors.primary600, border: Colors.primary600 },
+  primary:  { bg: Colors.primary600, text: Colors.white },
+  secondary:{ bg: Colors.secondary600, text: Colors.primary700 },
+  danger:   { bg: Colors.expense, text: Colors.white },
+  ghost:    { bg: 'transparent', text: Colors.primary600 },
+  outline:  { bg: 'transparent', text: Colors.primary600, border: Colors.primary600 },
 };
 
 const sizeConfig: Record<ButtonSize, { py: number; px: number; fontSize: number; height: number }> = {
-  sm: { py: Spacing.two, px: Spacing.three, fontSize: FontSize.sm, height: 36 },
-  md: { py: Spacing.three, px: Spacing.four, fontSize: FontSize.md, height: 44 },
-  lg: { py: Spacing.four, px: Spacing.five, fontSize: FontSize.lg, height: 52 },
+  sm: { py: Spacing.two,   px: Spacing.three, fontSize: FontSize.sm, height: 36 },
+  md: { py: Spacing.three, px: Spacing.four,  fontSize: FontSize.md, height: 44 },
+  lg: { py: Spacing.four,  px: Spacing.five,  fontSize: FontSize.lg, height: 52 },
 };
 
 export function Button({
@@ -52,38 +56,67 @@ export function Button({
   const sc = sizeConfig[size];
   const isDisabled = disabled || loading;
 
+
+  const scale = useRef(new Animated.Value(1)).current;
+
+  function onPressIn() {
+    Animated.spring(scale, {
+      toValue: 0.96,
+      friction: 6,
+      tension: 300,
+      useNativeDriver: USE_NATIVE_DRIVER,
+    }).start();
+  }
+
+  function onPressOut() {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 4,
+      tension: 180,
+      useNativeDriver: USE_NATIVE_DRIVER,
+    }).start();
+  }
+
   return (
-    <TouchableOpacity
+    <Animated.View
       style={[
-        styles.base,
-        {
-          backgroundColor: vc.bg,
-          borderColor: vc.border ?? 'transparent',
-          borderWidth: vc.border ? 1.5 : 0,
-          paddingVertical: sc.py,
-          paddingHorizontal: sc.px,
-          height: sc.height,
-          width: fullWidth ? '100%' : undefined,
-          opacity: isDisabled ? 0.6 : 1,
-        },
+        { transform: [{ scale }] },
+        fullWidth && { width: '100%' },
         style,
       ]}
-      disabled={isDisabled}
-      activeOpacity={0.8}
-      {...props}
     >
-      {loading ? (
-        <ActivityIndicator color={vc.text} size="small" />
-      ) : (
-        <View style={styles.content}>
-          {leftIcon}
-          <Text style={[styles.label, { color: vc.text, fontSize: sc.fontSize }]}>
-            {children}
-          </Text>
-          {rightIcon}
-        </View>
-      )}
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.base,
+          {
+            backgroundColor: vc.bg,
+            borderColor: vc.border ?? 'transparent',
+            borderWidth: vc.border ? 1.5 : 0,
+            paddingVertical: sc.py,
+            paddingHorizontal: sc.px,
+            height: sc.height,
+            opacity: isDisabled ? 0.6 : 1,
+          },
+        ]}
+        disabled={isDisabled}
+        activeOpacity={1}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        {...props}
+      >
+        {loading ? (
+          <ActivityIndicator color={vc.text} size="small" />
+        ) : (
+          <View style={styles.content}>
+            {leftIcon}
+            <Text style={[styles.label, { color: vc.text, fontSize: sc.fontSize }]}>
+              {children}
+            </Text>
+            {rightIcon}
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 

@@ -13,9 +13,9 @@ interface FadeInViewProps extends ViewProps {
 
 export function FadeInView({
   children,
-  delay = 0,
-  duration = 350,
-  offsetY = 16,
+  delay = 1,
+  duration = 1000,
+  offsetY = 10,
   style,
   ...rest
 }: FadeInViewProps) {
