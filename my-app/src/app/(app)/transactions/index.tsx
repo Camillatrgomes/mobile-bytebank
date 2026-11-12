@@ -5,7 +5,7 @@ import { Header } from '@/components/organisms/Header';
 import { ExtratoListInfinite } from '@/components/organisms/ExtratoListInfinite';
 import { FilterBar } from '@/components/molecules/FilterBar';
 import { Modal } from '@/components/atoms/Modal';
-import { useInfiniteStatement } from '@/hooks/useInfiniteStatement';
+import { useStatementStream } from '@/hooks/useStatementStream';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { SlidersHorizontal } from 'lucide-react-native';
 
@@ -17,8 +17,7 @@ export default function TransactionsScreen() {
     loadMore,
     isLoadingMore,
     isLoading,
-    mutate,
-  } = useInfiniteStatement();
+  } = useStatementStream();
   const [filterVisible, setFilterVisible] = useState(false);
 
   return (
@@ -52,8 +51,6 @@ export default function TransactionsScreen() {
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
           onEndReached={loadMore}
-          onRefresh={() => mutate()}
-          refreshing={isLoading}
           emptyMessage="Nenhuma transação para os filtros selecionados"
         />
       </View>

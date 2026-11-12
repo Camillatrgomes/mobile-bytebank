@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useTransactions } from '@/contexts/TransactionsContext';
-import type { IApiTransaction } from './useAccount';
+import type { Transaction } from '@/domain/entities/Transaction';
+import { useAccountData } from '@/stores/selectors';
 
 export interface ITransaction {
   id: string;
@@ -11,19 +11,19 @@ export interface ITransaction {
   category: string;
 }
 
-function normalize(t: IApiTransaction): ITransaction {
+function normalize(t: Transaction): ITransaction {
   return {
     id: t.id,
-    amount: Math.abs(t.value),
+    amount: t.value,
     type: t.type === 'Credit' ? 'deposito' : 'transferencia',
     date: t.date,
-    description: t.to ?? t.from ?? t.category ?? '',
-    category: t.category?.trim() || (t.type === 'Credit' ? 'Renda' : 'Outros'),
+    description: t.description || t.category,
+    category: t.type === 'Credit' ? 'Renda' : t.category || 'Outros',
   };
 }
 
 export function useTransactionList(month?: string) {
-  const { transactions, isLoading, error, mutate } = useTransactions();
+  const { transactions, isLoading, error } = useAccountData();
 
   const normalized = useMemo(() => {
     let list = transactions.map(normalize);
@@ -54,5 +54,5 @@ export function useTransactionList(month?: string) {
       .sort((a, b) => b.value - a.value);
   }, [normalized]);
 
-  return { transactions: normalized, receitas, despesas, lucro, byCategory, isLoading, error, mutate };
+  return { transactions: normalized, receitas, despesas, lucro, byCategory, isLoading, error };
 }

@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthUser } from '@/stores/selectors';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { User } from 'lucide-react-native';
 
@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, showLogout = false }: HeaderProps) {
-  const { user } = useAuthContext();
+  const user = useAuthUser();
 
   return (
     <View style={styles.header}>

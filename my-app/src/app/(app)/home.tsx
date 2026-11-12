@@ -1,29 +1,34 @@
-import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
+import { lazy, Suspense, useEffect } from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
 import { SaldoDashboard } from '@/components/organisms/SaldoDashboard';
 import { ReceitasDespesasCard } from '@/components/molecules/ReceitasDespesasCard';
 import { ExtratoList } from '@/components/organisms/ExtratoList';
-import { DespesasPorCategoriaChart } from '@/components/organisms/DespesasPorCategoriaChart';
 import { TransactionForm } from '@/components/organisms/TransactionForm';
 import { Button } from '@/components/atoms/Button';
 import { FadeInView } from '@/components/atoms/FadeInView';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
-import { useTransactions } from '@/contexts/TransactionsContext';
+import { useAccountData, useAccountSummary, useTransactionForm } from '@/stores/selectors';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 
+const DespesasPorCategoriaChart = lazy(() =>
+  import('@/components/organisms/DespesasPorCategoriaChart').then((m) => ({
+    default: m.DespesasPorCategoriaChart,
+  })),
+);
+
 export default function HomeScreen() {
-  const {
-    transactions,
-    saldo,
-    receitas,
-    despesas,
-    accountId,
-    isLoading,
-    mutate,
-    metaMessage,
-    openForm,
-  } = useTransactions();
+  const router = useRouter();
+  const { account, transactions, isLoading } = useAccountData();
+  const { saldo, receitas, despesas, metaMessage } = useAccountSummary();
+  const { openForm } = useTransactionForm();
+
+  useEffect(() => {
+    router.prefetch('/transactions');
+    router.prefetch('/investments');
+  }, [router]);
 
   const recentTransactions = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -37,9 +42,6 @@ export default function HomeScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={() => mutate()} />
-        }
       >
         {isLoading ? (
           <>
@@ -69,7 +71,9 @@ export default function HomeScreen() {
 
             {/* Expenses Chart */}
             <FadeInView delay={160}>
-              <DespesasPorCategoriaChart transactions={transactions} />
+              <Suspense fallback={<SkeletonCard lines={6} />}>
+                <DespesasPorCategoriaChart transactions={transactions} />
+              </Suspense>
             </FadeInView>
 
             {/* Recent Transactions */}
@@ -85,7 +89,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* Transaction form modal */}
-      <TransactionForm accountId={accountId} />
+      <TransactionForm accountId={account?.id ?? null} />
     </SafeAreaView>
   );
 }

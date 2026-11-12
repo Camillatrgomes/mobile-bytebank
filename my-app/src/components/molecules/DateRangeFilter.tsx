@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTransactionFilters } from '@/contexts/TransactionsContext';
+import { useFilterActions, useFilters } from '@/stores/selectors';
 import { FloatInput } from '@/components/atoms/FloatInput';
 import { formatDateInput, maskDateInput, parseDateInput } from '@/lib/formatters';
 import { Spacing } from '@/constants/theme';
@@ -8,10 +8,8 @@ import { Spacing } from '@/constants/theme';
 const DATE_LENGTH = 10;
 
 export function DateRangeFilter() {
-  const {
-    filters: { startDate, endDate },
-    setDateRange,
-  } = useTransactionFilters();
+  const { startDate, endDate } = useFilters();
+  const { setDateRange } = useFilterActions();
 
   const [start, setStart] = useState(() => formatDateInput(startDate));
   const [end, setEnd] = useState(() => formatDateInput(endDate));
