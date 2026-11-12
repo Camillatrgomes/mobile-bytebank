@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
   browserLocalPersistence,
@@ -12,6 +11,7 @@ import {
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { DEV_HOST } from '../devHost';
+import { encryptedStateStorage } from '../security/encryptedStateStorage';
 
 declare global {
   var __bytebankFirebaseEmulator: boolean | undefined;
@@ -35,7 +35,7 @@ try {
     persistence:
       Platform.OS === 'web'
         ? browserLocalPersistence
-        : getReactNativePersistence(AsyncStorage),
+        : getReactNativePersistence(encryptedStateStorage),
   });
 } catch {
   // initializeAuth lança no Fast Refresh; reaproveita a instância existente.

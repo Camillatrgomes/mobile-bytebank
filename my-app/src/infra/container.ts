@@ -10,6 +10,7 @@ import { FirebaseAuthRepository } from './repositories/FirebaseAuthRepository';
 import { FirestoreTransactionRepository } from './repositories/FirestoreTransactionRepository';
 import { HttpAccountRepository } from './repositories/HttpAccountRepository';
 import { StorageReceiptRepository } from './repositories/StorageReceiptRepository';
+import { forgetKey } from './security/cryptoBox';
 
 const auth = new FirebaseAuthRepository();
 const transactions = new FirestoreTransactionRepository();
@@ -26,7 +27,11 @@ export const container = {
   loadAccount: () => accounts.getSnapshot(),
   login: login({ auth, accounts }),
   register: register({ auth, accounts }),
-  logout: () => auth.signOut(),
+  // Apaga a chave junto: o próximo usuário não herda a sessão cifrada.
+  logout: async () => {
+    await auth.signOut();
+    await forgetKey();
+  },
   updateUsername: (username: string) => auth.updateUsername(username),
   onAuthChanged: auth.onAuthChanged.bind(auth),
 } as const;
