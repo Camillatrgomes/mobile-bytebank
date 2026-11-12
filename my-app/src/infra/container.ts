@@ -11,6 +11,7 @@ import { FirestoreTransactionRepository } from './repositories/FirestoreTransact
 import { HttpAccountRepository } from './repositories/HttpAccountRepository';
 import { StorageReceiptRepository } from './repositories/StorageReceiptRepository';
 import { forgetKey } from './security/cryptoBox';
+import { encryptedStateStorage } from './security/encryptedStateStorage';
 
 const auth = new FirebaseAuthRepository();
 const transactions = new FirestoreTransactionRepository();
@@ -32,6 +33,7 @@ export const container = {
     await auth.signOut();
     await forgetKey();
   },
+  encryptedStorage: encryptedStateStorage,
   updateUsername: (username: string) => auth.updateUsername(username),
   onAuthChanged: auth.onAuthChanged.bind(auth),
 } as const;

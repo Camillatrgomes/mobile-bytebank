@@ -11,6 +11,9 @@ export interface AccountSlice {
   /** Só na primeira carga, como o isLoading do SWR: recargas não piscam a tela. */
   isAccountLoading: boolean;
   accountError: Error | null;
+  /** uid dono do cache persistido e quando o servidor o confirmou pela última vez (epoch ms). */
+  cacheOwner: string | null;
+  cachedAt: number | null;
   loadAccount: (options?: { force?: boolean }) => Promise<void>;
 }
 
@@ -19,6 +22,8 @@ export const initialAccountState = {
   transactions: [],
   isAccountLoading: true,
   accountError: null,
+  cacheOwner: null,
+  cachedAt: null,
 } satisfies Partial<AccountSlice>;
 
 let latestRequest = 0;
@@ -30,7 +35,7 @@ export function cancelAccountRequests(): void {
   inFlight = null;
 }
 
-export const createAccountSlice: StateCreator<StoreState, [], [], AccountSlice> = (set) => ({
+export const createAccountSlice: StateCreator<StoreState, [['zustand/persist', unknown]], [], AccountSlice> = (set, get) => ({
   ...initialAccountState,
   loadAccount: ({ force = false } = {}) => {
     if (inFlight && !force) return inFlight;
@@ -40,7 +45,14 @@ export const createAccountSlice: StateCreator<StoreState, [], [], AccountSlice> 
       try {
         const { account, transactions } = await container.loadAccount();
         if (requestId !== latestRequest) return;
-        set({ account, transactions, isAccountLoading: false, accountError: null });
+        set({
+          account,
+          transactions,
+          isAccountLoading: false,
+          accountError: null,
+          cacheOwner: get().user?.id ?? null,
+          cachedAt: Date.now(),
+        });
       } catch (error) {
         if (requestId !== latestRequest) return;
         set({ accountError: error as Error, isAccountLoading: false });

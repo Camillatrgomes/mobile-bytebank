@@ -7,7 +7,7 @@ export interface UiSlice {
   closeForm: () => void;
 }
 
-export const createUiSlice: StateCreator<StoreState, [], [], UiSlice> = (set) => ({
+export const createUiSlice: StateCreator<StoreState, [['zustand/persist', unknown]], [], UiSlice> = (set) => ({
   isFormOpen: false,
   openForm: () => set({ isFormOpen: true }),
   closeForm: () => set({ isFormOpen: false }),

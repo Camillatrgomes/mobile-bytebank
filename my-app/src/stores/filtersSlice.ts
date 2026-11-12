@@ -34,7 +34,7 @@ export function initialFilters(): TransactionFilters {
   return { month: getCurrentMonth(), type: 'all', category: '', search: '', startDate: null, endDate: null };
 }
 
-export const createFiltersSlice: StateCreator<StoreState, [], [], FiltersSlice> = (set) => ({
+export const createFiltersSlice: StateCreator<StoreState, [['zustand/persist', unknown]], [], FiltersSlice> = (set) => ({
   filters: initialFilters(),
   setMonth: (month) => set((s) => ({ filters: { ...s.filters, month, startDate: null, endDate: null } })),
   setType: (type) => set((s) => ({ filters: { ...s.filters, type } })),

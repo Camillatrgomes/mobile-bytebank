@@ -8,7 +8,14 @@ import {
   initializeAuth,
   type Auth,
 } from 'firebase/auth';
-import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import {
+  connectFirestoreEmulator,
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from 'firebase/firestore';
 import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { DEV_HOST } from '../devHost';
 import { encryptedStateStorage } from '../security/encryptedStateStorage';
@@ -42,7 +49,19 @@ try {
   auth = getAuth(app);
 }
 
-const db = getFirestore(app);
+// O JS SDK só persiste na web; no nativo, getFirestore.
+let db: Firestore;
+try {
+  db =
+    Platform.OS === 'web'
+      ? initializeFirestore(app, {
+          localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+        })
+      : getFirestore(app);
+} catch {
+  // initializeFirestore lança no Fast Refresh; reaproveita a instância existente.
+  db = getFirestore(app);
+}
 const storage = getStorage(app);
 
 export const isUsingEmulator = process.env.EXPO_PUBLIC_USE_EMULATOR === '1';

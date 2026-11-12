@@ -1,5 +1,6 @@
 import type { StateCreator } from 'zustand';
 import type { AuthUser } from '@/domain/entities/User';
+import { cancelAccountRequests, initialAccountState } from './accountSlice';
 import type { StoreState } from './index';
 
 export interface AuthSlice {
@@ -10,9 +11,14 @@ export interface AuthSlice {
   markAuthReady: () => void;
 }
 
-export const createAuthSlice: StateCreator<StoreState, [], [], AuthSlice> = (set) => ({
+export const createAuthSlice: StateCreator<StoreState, [['zustand/persist', unknown]], [], AuthSlice> = (set, get) => ({
   user: null,
   isAuthReady: false,
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    // Outro usuário na mesma sessão (ex.: expirou sem logout): não herda a conta do anterior.
+    const isOtherOwner = (owner: string | null) => !!user && owner !== null && owner !== user.id;
+    if (isOtherOwner(get().cacheOwner)) cancelAccountRequests();
+    set((s) => (isOtherOwner(s.cacheOwner) ? { user, ...initialAccountState } : { user }));
+  },
   markAuthReady: () => set({ isAuthReady: true }),
 });
