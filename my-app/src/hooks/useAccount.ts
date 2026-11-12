@@ -1,5 +1,5 @@
 import useSWR, { mutate as globalMutate } from 'swr';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/infra/http/apiClient';
 import { revalidateStatement } from '@/lib/statementRevalidation';
 
 export interface IApiTransaction {

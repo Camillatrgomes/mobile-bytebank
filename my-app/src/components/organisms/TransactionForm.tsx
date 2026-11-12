@@ -5,23 +5,23 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { Modal } from '@/components/atoms/Modal';
 import { Button } from '@/components/atoms/Button';
 import { FloatInput } from '@/components/atoms/FloatInput';
-import { apiFetch } from '@/lib/api';
+import { container } from '@/infra/container';
 import { suggestCategory } from '@/lib/categoryHelpers';
 import { useToast } from '@/components/atoms/Toast';
 import { revalidateAccount } from '@/hooks/useAccount';
 import { useTransactions } from '@/contexts/TransactionsContext';
 import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
-import { uploadReceipt } from '@/lib/receipts';
 import {
   createTransactionSchema,
   parseAmount,
   sanitizeAmountInput,
+  transactionRuleMessage,
   type TransactionFormValues,
 } from '@/lib/transactionSchema';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
-import type { DocumentPickerAsset } from 'expo-document-picker';
+import type { PickedFile } from '@/domain/repositories/ReceiptRepository';
 
 interface TransactionFormProps {
   accountId: string | null;
@@ -30,7 +30,7 @@ interface TransactionFormProps {
 export function TransactionForm({ accountId }: TransactionFormProps) {
   const { isFormOpen, closeForm, saldo } = useTransactions();
   const toast = useToast();
-  const [receipt, setReceipt] = useState<DocumentPickerAsset | null>(null);
+  const [receipt, setReceipt] = useState<PickedFile | null>(null);
   const schema = useMemo(() => createTransactionSchema({ availableBalance: saldo }), [saldo]);
 
   const {
@@ -82,19 +82,27 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
     }
 
     try {
-      const amount = parseAmount(data.value) ?? 0;
-      const attachment = receipt ? await uploadReceipt(receipt) : {};
-      await apiFetch('/account/transaction', {
-        method: 'POST',
-        body: {
-          accountId,
+      const attached = receipt ? await container.attachReceipt(receipt) : null;
+      if (attached && !attached.ok) {
+        toast(attached.message, 'error');
+        return;
+      }
+
+      const result = await container.createTransaction(
+        accountId,
+        {
           type: data.type,
-          value: data.type === 'Debit' ? -amount : amount,
-          to: data.description,
+          value: parseAmount(data.value) ?? 0,
+          description: data.description,
           category: data.category,
-          ...attachment,
+          receipt: attached?.receipt ?? null,
         },
-      });
+        saldo
+      );
+      if (!result.ok) {
+        toast(transactionRuleMessage(result.errors[0]), 'error');
+        return;
+      }
 
       await revalidateAccount();
       toast('Transação criada com sucesso!', 'success');
@@ -199,7 +207,7 @@ export function TransactionForm({ accountId }: TransactionFormProps) {
             )}
           </View>
 
-          <ReceiptPicker asset={receipt} onChange={setReceipt} />
+          <ReceiptPicker file={receipt} onChange={setReceipt} />
         </View>
 
         <Button

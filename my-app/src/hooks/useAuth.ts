@@ -6,8 +6,8 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { apiFetch } from '@/lib/api';
+import { auth } from '@/infra/firebase/client';
+import { container } from '@/infra/container';
 import { toAuthUser, useAuthContext } from '@/contexts/AuthContext';
 
 interface LoginPayload {
@@ -52,7 +52,7 @@ export function useAuth() {
     try {
       const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
       // Idempotente: recria conta e cartão se o cadastro falhou depois de criar o usuário no Auth.
-      await apiFetch('/user', { method: 'POST', body: { username: firebaseUser.displayName } });
+      await container.provisionAccount(firebaseUser.displayName);
       setUser(toAuthUser(firebaseUser));
     } catch (err) {
       await signOutAndThrow(err);
@@ -63,7 +63,7 @@ export function useAuth() {
     try {
       const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(firebaseUser, { displayName: username });
-      await apiFetch('/user', { method: 'POST', body: { username } });
+      await container.provisionAccount(username);
       setUser({ ...toAuthUser(firebaseUser), username });
     } catch (err) {
       await signOutAndThrow(err);

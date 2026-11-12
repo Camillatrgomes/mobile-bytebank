@@ -4,23 +4,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Button } from '@/components/atoms/Button';
 import { FloatInput } from '@/components/atoms/FloatInput';
-import { apiFetch } from '@/lib/api';
+import { container } from '@/infra/container';
 import { useToast } from '@/components/atoms/Toast';
 import { revalidateAccount } from '@/hooks/useAccount';
 import { useTransactions } from '@/contexts/TransactionsContext';
 import { ReceiptPicker } from '@/components/molecules/ReceiptPicker';
-import { uploadReceipt } from '@/lib/receipts';
 import {
   createTransactionSchema,
   formatAmountInput,
   parseAmount,
   sanitizeAmountInput,
+  transactionRuleMessage,
   type TransactionFormValues,
 } from '@/lib/transactionSchema';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
-import type { DocumentPickerAsset } from 'expo-document-picker';
+import type { PickedFile } from '@/domain/repositories/ReceiptRepository';
 import type { IApiTransaction } from '@/hooks/useAccount';
 
 interface TransactionEditFormProps {
@@ -32,12 +32,10 @@ interface TransactionEditFormProps {
 export function TransactionEditForm({ transaction, onSuccess, onCancel }: TransactionEditFormProps) {
   const toast = useToast();
   const { saldo } = useTransactions();
-  const [receipt, setReceipt] = useState<DocumentPickerAsset | null>(null);
+  const [receipt, setReceipt] = useState<PickedFile | null>(null);
   // O valor original volta ao saldo: editar não pode ser barrado pelo próprio lançamento.
-  const schema = useMemo(
-    () => createTransactionSchema({ availableBalance: saldo - transaction.value }),
-    [saldo, transaction.value]
-  );
+  const availableBalance = saldo - transaction.value;
+  const schema = useMemo(() => createTransactionSchema({ availableBalance }), [availableBalance]);
 
   const {
     control,
@@ -70,18 +68,27 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
 
   async function onSubmit(data: TransactionFormValues) {
     try {
-      const amount = parseAmount(data.value) ?? 0;
-      const attachment = receipt ? await uploadReceipt(receipt) : {};
-      await apiFetch(`/account/transaction/${transaction.id}`, {
-        method: 'PUT',
-        body: {
+      const attached = receipt ? await container.attachReceipt(receipt) : null;
+      if (attached && !attached.ok) {
+        toast(attached.message, 'error');
+        return;
+      }
+
+      const result = await container.updateTransaction(
+        transaction.id,
+        {
           type: data.type,
-          value: data.type === 'Debit' ? -amount : amount,
-          to: data.description,
+          value: parseAmount(data.value) ?? 0,
+          description: data.description,
           category: data.category,
-          ...attachment,
+          receipt: attached?.receipt ?? null,
         },
-      });
+        availableBalance
+      );
+      if (!result.ok) {
+        toast(transactionRuleMessage(result.errors[0]), 'error');
+        return;
+      }
 
       await revalidateAccount();
       toast('Transação atualizada!', 'success');
@@ -193,7 +200,7 @@ export function TransactionEditForm({ transaction, onSuccess, onCancel }: Transa
           )}
         </View>
 
-        <ReceiptPicker asset={receipt} onChange={setReceipt} currentName={transaction.anexo} />
+        <ReceiptPicker file={receipt} onChange={setReceipt} currentName={transaction.anexo} />
       </View>
 
       <View style={styles.actions}>

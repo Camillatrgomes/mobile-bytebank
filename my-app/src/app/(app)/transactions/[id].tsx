@@ -16,7 +16,7 @@ import { TransactionEditForm } from '@/components/organisms/TransactionEditForm'
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Modal } from '@/components/atoms/Modal';
-import { apiFetch } from '@/lib/api';
+import { container } from '@/infra/container';
 import { useToast } from '@/components/atoms/Toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme';
@@ -42,7 +42,7 @@ export default function TransactionDetailScreen() {
     setDeleteModalVisible(false);
     setIsDeleting(true);
     try {
-      await apiFetch(`/account/transaction/${id}`, { method: 'DELETE' });
+      await container.deleteTransaction(id);
       toast('Transação excluída', 'success');
       router.back();
       // Revalidate after navigating to avoid re-render with missing transaction

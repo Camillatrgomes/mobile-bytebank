@@ -11,7 +11,7 @@ import {
 } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectStorageEmulator, getStorage } from 'firebase/storage';
-import { DEV_HOST } from './devHost';
+import { DEV_HOST } from '../devHost';
 
 declare global {
   var __bytebankFirebaseEmulator: boolean | undefined;

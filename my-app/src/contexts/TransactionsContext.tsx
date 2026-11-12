@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useReducer, useState } from 'react';
+import type { StatementQuery } from '@/domain/repositories/TransactionRepository';
 import { useAccount } from '@/hooks/useAccount';
 
 export type TransactionTypeFilter = 'all' | 'Credit' | 'Debit';
@@ -29,6 +30,29 @@ export function getCurrentMonth(): string {
 
 export function createInitialFilters(): TransactionFilters {
   return { month: getCurrentMonth(), type: 'all', category: '', search: '', startDate: null, endDate: null };
+}
+
+function lastDayOfMonth(month: string): string {
+  const [year, monthNumber] = month.split('-').map(Number);
+  return new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10);
+}
+
+// Datas YYYY-MM-DD ordenam como texto, então a comparação é direta.
+const latest = (a: string | null, b: string | null) => (a && b ? (a > b ? a : b) : (a ?? b));
+const earliest = (a: string | null, b: string | null) => (a && b ? (a < b ? a : b) : (a ?? b));
+
+/** Mês e período viram um único intervalo inclusivo: a interseção dos dois. */
+export function toStatementQuery(filters: TransactionFilters, pageSize: number): StatementQuery {
+  const monthStart = filters.month ? `${filters.month}-01` : null;
+  const monthEnd = filters.month ? lastDayOfMonth(filters.month) : null;
+  return {
+    type: filters.type,
+    category: filters.category,
+    search: filters.search,
+    startDate: latest(monthStart, filters.startDate),
+    endDate: earliest(monthEnd, filters.endDate),
+    pageSize,
+  };
 }
 
 export function filtersReducer(state: TransactionFilters, action: FiltersAction): TransactionFilters {

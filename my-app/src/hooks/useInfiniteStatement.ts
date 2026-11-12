@@ -2,27 +2,25 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 import {
-  collection,
   getCountFromServer,
   getDocs,
   limit,
-  orderBy,
   query,
   startAfter,
-  Timestamp,
-  where,
-  type QueryConstraint,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { buildStatementQuery } from '@/infra/repositories/FirestoreTransactionRepository';
 import { registerStatementRevalidator } from '@/lib/statementRevalidation';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useTransactionFilters, type TransactionFilters } from '@/contexts/TransactionsContext';
+import {
+  toStatementQuery,
+  useTransactionFilters,
+  type TransactionFilters,
+} from '@/contexts/TransactionsContext';
 import type { IApiTransaction } from './useAccount';
 
 export const STATEMENT_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
-const DAY_MS = 86_400_000;
 
 type StatementFilters = TransactionFilters;
 
@@ -31,46 +29,9 @@ interface StatementPage {
   cursor: QueryDocumentSnapshot | null;
 }
 
-// Mesma normalização usada pelo backend ao gravar descriptionLower.
-const normalize = (text: string) =>
-  text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-
-// Mês (YYYY-MM) e intervalo (YYYY-MM-DD, inclusivo) viram um único intervalo UTC, como o ISO do resto do app.
-function dateBounds({ month, startDate, endDate }: StatementFilters) {
-  const lower: number[] = [];
-  const upper: number[] = [];
-  if (month) {
-    const [year, monthNumber] = month.split('-').map(Number);
-    lower.push(Date.UTC(year, monthNumber - 1, 1));
-    upper.push(Date.UTC(year, monthNumber, 1));
-  }
-  if (startDate) lower.push(Date.parse(startDate));
-  if (endDate) upper.push(Date.parse(endDate) + DAY_MS);
-  return {
-    start: lower.length ? Math.max(...lower) : null,
-    end: upper.length ? Math.min(...upper) : null,
-  };
-}
-
-function statementQuery(uid: string, filters: StatementFilters) {
-  const { start, end } = dateBounds(filters);
-  if (start !== null && end !== null && start >= end) return null;
-
-  const term = normalize(filters.search);
-  const constraints: QueryConstraint[] = [];
-  if (filters.type !== 'all') constraints.push(where('type', '==', filters.type));
-  if (filters.category) constraints.push(where('category', '==', filters.category));
-  if (start !== null) constraints.push(where('date', '>=', Timestamp.fromMillis(start)));
-  if (end !== null) constraints.push(where('date', '<', Timestamp.fromMillis(end)));
-  if (term) {
-    // Busca por prefixo: o Firestore não oferece busca por "contém".
-    constraints.push(where('descriptionLower', '>=', term), where('descriptionLower', '<=', `${term}\uf8ff`));
-  }
-  constraints.push(orderBy('date', 'desc'));
-  if (term) constraints.push(orderBy('descriptionLower'));
-
-  return query(collection(db, 'users', uid, 'transactions'), ...constraints);
-}
+// O tamanho de página não entra na query base; a paginação aplica o limit depois.
+const statementQuery = (uid: string, filters: StatementFilters) =>
+  buildStatementQuery(uid, toStatementQuery(filters, STATEMENT_PAGE_SIZE));
 
 const toTransaction = (snapshot: QueryDocumentSnapshot): IApiTransaction => {
   const data = snapshot.data();
