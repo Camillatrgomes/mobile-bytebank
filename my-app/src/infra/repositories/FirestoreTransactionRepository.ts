@@ -1,4 +1,4 @@
-import { from, map, Observable, of, switchMap } from 'rxjs';
+import { catchError, from, map, Observable, of, switchMap } from 'rxjs';
 import {
   collection,
   getCountFromServer,
@@ -73,10 +73,13 @@ export class FirestoreTransactionRepository implements TransactionRepository {
     return snapshots(query(base, limit(statement.pageSize + 1))).pipe(
       switchMap((snapshot) =>
         from(getCountFromServer(base)).pipe(
+          map((count) => count.data().count),
+          // Sem rede ou sem permissão a contagem falha; o listener segue vivo com um total aproximado.
+          catchError(() => of(null)),
           map(
             (count): StatementSnapshot => ({
               transactions: snapshot.docs.slice(0, statement.pageSize).map(toTransaction),
-              total: count.data().count,
+              total: count ?? Math.min(snapshot.size, statement.pageSize),
               hasMore: snapshot.size > statement.pageSize,
             })
           )
