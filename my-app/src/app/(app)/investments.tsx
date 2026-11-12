@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/organisms/Header';
 import { InvestmentsKPICards } from '@/components/molecules/InvestmentsKPICards';
-import { InvestmentsPieChart } from '@/components/organisms/InvestmentsPieChart';
-import { InvestmentsTable } from '@/components/organisms/InvestmentsTable';
 import { FadeInView } from '@/components/atoms/FadeInView';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
 import { useTransactionList } from '@/hooks/useTransactionList';
@@ -16,6 +14,13 @@ const FULL_MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
+
+const InvestmentsPieChart = lazy(() =>
+  import('@/components/organisms/InvestmentsPieChart').then((m) => ({ default: m.InvestmentsPieChart })),
+);
+const InvestmentsTable = lazy(() =>
+  import('@/components/organisms/InvestmentsTable').then((m) => ({ default: m.InvestmentsTable })),
+);
 
 export default function InvestmentsScreen() {
   const months = getLastMonths(6);
@@ -85,12 +90,16 @@ export default function InvestmentsScreen() {
 
             {/* Pie Chart */}
             <FadeInView delay={80}>
-              <InvestmentsPieChart data={byCategory} />
+              <Suspense fallback={<SkeletonCard lines={6} />}>
+                <InvestmentsPieChart data={byCategory} />
+              </Suspense>
             </FadeInView>
 
             {/* Table */}
             <FadeInView delay={160}>
-              <InvestmentsTable transactions={transactions} />
+              <Suspense fallback={<SkeletonCard lines={5} />}>
+                <InvestmentsTable transactions={transactions} />
+              </Suspense>
             </FadeInView>
           </React.Fragment>
         )}
