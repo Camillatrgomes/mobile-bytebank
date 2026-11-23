@@ -1,5 +1,5 @@
-import { auth } from './firebase';
-import { DEV_HOST } from './devHost';
+import { auth } from '../firebase/client';
+import { DEV_HOST } from '../devHost';
 
 export const BASE_URL = `http://${DEV_HOST}:3000`;
 

@@ -1,7 +1,23 @@
 import { z } from 'zod';
-import { CREDIT_CATEGORIES, DEBIT_CATEGORIES } from '@/constants/categories';
+import {
+  categoriesFor,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_TRANSACTION_VALUE,
+  MIN_DESCRIPTION_LENGTH,
+  type TransactionRuleError,
+} from '@/domain/entities/Transaction';
+import { formatCurrency } from '@/lib/formatters';
 
-export const MAX_TRANSACTION_VALUE = 1_000_000;
+const RULE_MESSAGES: Record<TransactionRuleError, string> = {
+  'value-not-positive': 'O valor deve ser maior que zero',
+  'value-too-high': 'O valor máximo é R$ 1.000.000,00',
+  'description-too-short': `A descrição deve ter ao menos ${MIN_DESCRIPTION_LENGTH} caracteres`,
+  'description-too-long': `A descrição deve ter no máximo ${MAX_DESCRIPTION_LENGTH} caracteres`,
+  'category-mismatch': 'Categoria inválida para o tipo da transação',
+  'insufficient-balance': 'Saldo insuficiente',
+};
+
+export const transactionRuleMessage = (error: TransactionRuleError) => RULE_MESSAGES[error];
 
 const DOT_DECIMAL_AMOUNT = /^\d+(\.\d{1,2})?$/;
 const BR_AMOUNT = /^(\d{1,3}(\.\d{3})+|\d+)(,\d{1,2})?$/;
@@ -44,18 +60,17 @@ export function createTransactionSchema(_options: TransactionSchemaOptions) {
         .trim()
         .min(1, 'Informe o valor')
         .refine((v) => parseAmount(v) !== null, 'Use o formato 1.234,56')
-        .refine((v) => (parseAmount(v) ?? 1) > 0, 'O valor deve ser maior que zero')
-        .refine((v) => (parseAmount(v) ?? 0) <= MAX_TRANSACTION_VALUE, 'O valor máximo é R$ 1.000.000,00'),
+        .refine((v) => (parseAmount(v) ?? 1) > 0, RULE_MESSAGES['value-not-positive'])
+        .refine((v) => (parseAmount(v) ?? 0) <= MAX_TRANSACTION_VALUE, RULE_MESSAGES['value-too-high']),
       description: z
         .string()
         .trim()
-        .min(3, 'A descrição deve ter ao menos 3 caracteres')
-        .max(60, 'A descrição deve ter no máximo 60 caracteres'),
+        .min(MIN_DESCRIPTION_LENGTH, RULE_MESSAGES['description-too-short'])
+        .max(MAX_DESCRIPTION_LENGTH, RULE_MESSAGES['description-too-long']),
       category: z.string().min(1, 'Selecione uma categoria'),
     })
     .superRefine((data, ctx) => {
-      const categories: readonly string[] = data.type === 'Credit' ? CREDIT_CATEGORIES : DEBIT_CATEGORIES;
-      if (!categories.includes(data.category)) {
+      if (!categoriesFor(data.type).includes(data.category)) {
         ctx.addIssue({
           code: 'custom',
           path: ['category'],

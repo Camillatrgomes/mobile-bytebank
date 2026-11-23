@@ -3,17 +3,26 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Paperclip, X } from 'lucide-react-native';
 import { useToast } from '@/components/atoms/Toast';
-import { getReceiptError, RECEIPT_TYPES } from '@/lib/receipts';
+import type { PickedFile } from '@/domain/repositories/ReceiptRepository';
+import { container, RECEIPT_TYPES } from '@/infra/container';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 
 interface ReceiptPickerProps {
-  asset: DocumentPicker.DocumentPickerAsset | null;
-  onChange: (asset: DocumentPicker.DocumentPickerAsset | null) => void;
+  file: PickedFile | null;
+  onChange: (file: PickedFile | null) => void;
   /** Nome do recibo já salvo na transação. */
   currentName?: string | null;
 }
 
-export function ReceiptPicker({ asset, onChange, currentName }: ReceiptPickerProps) {
+const toPickedFile = (asset: DocumentPicker.DocumentPickerAsset): PickedFile => ({
+  name: asset.name,
+  uri: asset.uri,
+  mimeType: asset.mimeType ?? null,
+  size: asset.size ?? null,
+  file: asset.file,
+});
+
+export function ReceiptPicker({ file, onChange, currentName }: ReceiptPickerProps) {
   const toast = useToast();
 
   async function handlePick() {
@@ -24,8 +33,8 @@ export function ReceiptPicker({ asset, onChange, currentName }: ReceiptPickerPro
     });
     if (result.canceled) return;
 
-    const [picked] = result.assets;
-    const error = getReceiptError(picked);
+    const picked = toPickedFile(result.assets[0]);
+    const error = container.validateReceipt(picked);
     if (error) {
       toast(error, 'error');
       return;
@@ -33,7 +42,7 @@ export function ReceiptPicker({ asset, onChange, currentName }: ReceiptPickerPro
     onChange(picked);
   }
 
-  const name = asset?.name ?? currentName;
+  const name = file?.name ?? currentName;
 
   return (
     <View>
@@ -45,7 +54,7 @@ export function ReceiptPicker({ asset, onChange, currentName }: ReceiptPickerPro
             {name ?? 'Anexar imagem ou PDF'}
           </Text>
         </TouchableOpacity>
-        {asset && (
+        {file && (
           <TouchableOpacity
             onPress={() => onChange(null)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

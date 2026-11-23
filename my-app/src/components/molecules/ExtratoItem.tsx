@@ -4,10 +4,10 @@ import { AnimatedTouchable } from '@/components/atoms/AnimatedTouchable';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
-import type { IApiTransaction } from '@/hooks/useAccount';
+import type { Transaction } from '@/domain/entities/Transaction';
 
 interface ExtratoItemProps {
-  transaction: IApiTransaction;
+  transaction: Transaction;
   onPress?: () => void;
 }
 

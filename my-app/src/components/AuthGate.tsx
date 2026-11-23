@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthStatus } from '@/stores/selectors';
 import { Colors } from '@/constants/theme';
 
 export function AuthGate() {
   const router = useRouter();
   const segments = useSegments();
-  const { isAuthenticated, isReady } = useAuthContext();
+  const { isAuthenticated, isReady } = useAuthStatus();
 
   useEffect(() => {
     if (!isReady) return;

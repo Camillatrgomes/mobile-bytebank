@@ -5,10 +5,10 @@ import { ExtratoItem } from '@/components/molecules/ExtratoItem';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { Receipt, Plus } from 'lucide-react-native';
-import type { IApiTransaction } from '@/hooks/useAccount';
+import type { Transaction } from '@/domain/entities/Transaction';
 
 interface ExtratoListProps {
-  transactions: IApiTransaction[];
+  transactions: readonly Transaction[];
   isLoading?: boolean;
   compact?: boolean;
   emptyMessage?: string;

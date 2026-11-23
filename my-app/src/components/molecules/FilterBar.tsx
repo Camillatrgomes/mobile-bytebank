@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { AnimatedTouchable } from '@/components/atoms/AnimatedTouchable';
-import { useTransactionFilters } from '@/contexts/TransactionsContext';
+import { useFilterActions, useFilters } from '@/stores/selectors';
 import { Colors, BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { getLastMonths } from '@/lib/formatters';
 import { FloatInput } from '@/components/atoms/FloatInput';
@@ -92,14 +92,8 @@ function FilterSlider({
 }
 
 export function FilterBar() {
-  const {
-    filters: { month, type, category, search, startDate, endDate },
-    setMonth,
-    setType,
-    setCategory,
-    setSearch,
-    resetFilters,
-  } = useTransactionFilters();
+  const { month, type, category, search, startDate, endDate } = useFilters();
+  const { setMonth, setType, setCategory, setSearch, resetFilters } = useFilterActions();
   const isAllMonths = month === '' && !startDate && !endDate;
   const months = getLastMonths(6);
   const categories = [...new Set([...CREDIT_CATEGORIES, ...DEBIT_CATEGORIES])];

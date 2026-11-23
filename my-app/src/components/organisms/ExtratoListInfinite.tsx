@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -12,10 +13,10 @@ import { ExtratoItem } from '@/components/molecules/ExtratoItem';
 import { SkeletonCard } from '@/components/atoms/Skeleton';
 import { ExtratoCardHeader, ExtratoEmptyState, extratoStyles } from './ExtratoList';
 import { Colors, Spacing, FontSize } from '@/constants/theme';
-import type { IApiTransaction } from '@/hooks/useAccount';
+import type { Transaction } from '@/domain/entities/Transaction';
 
 interface ExtratoListInfiniteProps {
-  transactions: IApiTransaction[];
+  transactions: readonly Transaction[];
   isLoading?: boolean;
   /** Há mais páginas além do que já foi carregado. */
   hasMore?: boolean;
@@ -86,6 +87,11 @@ export function ExtratoListInfinite({
           transactions.length === 0 && styles.emptyContent,
         ]}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        // Na web, removeClippedSubviews esconde linhas indevidamente.
+        removeClippedSubviews={Platform.OS !== 'web'}
         onEndReached={hasMore ? onEndReached : undefined}
         onEndReachedThreshold={0.4}
         refreshControl={

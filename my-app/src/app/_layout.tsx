@@ -1,4 +1,3 @@
-import { SWRConfig } from 'swr';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/atoms/Toast';
 import { StatusBar } from 'expo-status-bar';
@@ -31,17 +30,10 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <SWRConfig
-        value={{
-          revalidateOnFocus: true,
-          shouldRetryOnError: false,
-        }}
-      >
-        <ToastProvider>
-          <StatusBar style="light" />
-          <AuthGate />
-        </ToastProvider>
-      </SWRConfig>
+      <ToastProvider>
+        <StatusBar style="light" />
+        <AuthGate />
+      </ToastProvider>
     </AuthProvider>
   );
 }

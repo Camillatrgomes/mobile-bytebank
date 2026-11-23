@@ -3,12 +3,13 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-na
 import { PieChart } from 'react-native-chart-kit';
 import { Colors, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { formatCurrency } from '@/lib/formatters';
-import type { IApiTransaction } from '@/hooks/useAccount';
+import type { Transaction } from '@/domain/entities/Transaction';
+import { AlignCenter } from 'lucide-react-native';
 
 const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 interface DespesasPorCategoriaChartProps {
-  transactions: IApiTransaction[];
+  transactions: readonly Transaction[];
   isLoading?: boolean;
 }
 

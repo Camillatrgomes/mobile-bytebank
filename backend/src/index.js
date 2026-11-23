@@ -6,10 +6,13 @@ const swaggerDocs =  require('./swagger')
 const cors = require('cors')
 const { auth } = require('./infra/firebase/admin')
 
-app.use(Express.json({ limit: '5mb' }))
+app.use(Express.json({ limit: '100kb' }))
 
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:8081').split(',').map((o) => o.trim())
+
+// Sem Origin (app nativo) o cors não bloqueia; só navegadores fora da lista são barrados.
 app.use(cors({
-    origin: '*'
+    origin: allowedOrigins
 }))
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
